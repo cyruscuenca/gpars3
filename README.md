@@ -13,3 +13,5 @@ Feel free to look at my code and give me pointers!I'm a noob.
 This program is being worked on by Xander Soldaat: http://botbench.com
 
 and myself: http://cyruscuenca.blogspot.com
+
+You can check out my hardware at: https://www.youtube.com/watch?v=ibm2scWGx3Q

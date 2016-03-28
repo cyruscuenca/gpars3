@@ -6,6 +6,7 @@
 
 // This forces the debugstream to be opened
 #pragma DebuggerWindows("debugStream");
+
 // Comment out the line below if you want the motors to run
 #define DISABLE_MOTORS
 

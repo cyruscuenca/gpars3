@@ -25,20 +25,14 @@ typedef enum tCmdType
 	G1_F,
 } tCmdType;
 
-// prototype functions.
-long translateXdistToDegrees(float translateXdist, long gearSizeX);
-long translateYdistToDegrees(float translateYdist, long gearSizeY);
-long translateZdistToDegrees(float translateZdist, long gearSizeZ);
 
-void moveMotorXAxis(long translateXdistToDegrees);
-void moveMotorYAxis(long translateYdistToDegrees);
-void moveMotorZAxis(long z_degrees);
-
+#ifndef DISABLE_MOTORS
 void waitForMotors();
+#endif
 
-float translateXdist(float x);
-float translateYdist(float y);
-float translateZdist(float z);
+float calcDeltaDistance(float &currentPosition, float newPosition);
+float calcMotorDegrees(float travelDistance, long gearSize);
+void moveMotorAxis(tMotor axis, float degrees);
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
@@ -109,12 +103,13 @@ task main()
 }
 
 //-------------------------------------------------------------------------------------
-
+#ifndef DISABLE_MOTORS
 void waitForMotors(){
 	while(getMotorRunning(x_axis) || getMotorRunning(y_axis) || getMotorRunning(z_axis)){
 		sleep(1);
 	}
 }
+#endif
 
 //void homeAllAxes(){
 //	while(getTouchValue(xAxisLimit)== 0)
@@ -124,81 +119,36 @@ void waitForMotors(){
 
 //------------------------------------------------------------------------------------
 
-// No need to pass xAxisPosition as a variable, you already have access to it, because it is global
-float translateXdist(float x){
+// Calculate the distance (delta) from the current position to the new one
+// and update the current position
+float calcDeltaDistance(float &currentPosition, float newPosition){
 
-	writeDebugStreamLine("translateXdist(%f, %f)", xAxisPosition, x);
+	writeDebugStreamLine("calcDeltaDistance(%f, %f)", currentPosition, newPosition);
 
-	float deltaPosition = (xAxisPosition - x) * -1;
-	writeDebugStreamLine("x deltaPosition:%d", deltaPosition);
-	xAxisPosition = x;
-	writeDebugStreamLine("xAxisPosition:%d", xAxisPosition);
+	float deltaPosition = (currentPosition - newPosition) * -1;
+	writeDebugStreamLine("deltaPosition: %f", deltaPosition);
+	currentPosition = newPosition;
+	writeDebugStreamLine("Updated currentPosition: %f", currentPosition);
 	return deltaPosition;
 }
 
-long translateXdistToDegrees(float translateXdist, long gearSizeX){
-	writeDebugStreamLine("translateXdistToDegrees(%f, %f)", translateXdist, gearSizeX);
-	return round(translateXdist * gearSizeX);
-
+// Calculate the degrees the motor has to turn, using provided gear size
+float calcMotorDegrees(float travelDistance, long gearSize)
+{
+	writeDebugStreamLine("calcMotorDegrees(%f, %f)", travelDistance, gearSize);
+	return travelDistance * gearSize;
 }
 
-void moveMotorXAxis(long translateXdistToDegrees){
-	writeDebugStreamLine("moveMotorXAxis: translateXdistToDegrees:%d", translateXdistToDegrees);
+// Wrapper to move the motor, provides additional debugging feedback
+void moveMotorAxis(tMotor axis, float degrees)
+{
+	writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
-	moveMotorTarget(x_axis, translateXdistToDegrees, 50);
+	moveMotorTarget(axis, round(degrees), 50);
 #endif
 	return;
 }
 
-//------------------------------------------------------------------------------------
-
-float translateYdist(float y){
-
-	writeDebugStreamLine("translateYdist(%f, %f)", yAxisPosition, y);
-
-	float deltaPosition = (yAxisPosition - y) * -1;
-	writeDebugStreamLine("y deltaPosition:%d", deltaPosition);
-	yAxisPosition = y;
-	writeDebugStreamLine("yAxisPosition:%d", yAxisPosition);
-	return deltaPosition;
-}
-
-long translateYdistToDegrees(float translateYdist, long gearSizeY){
-	writeDebugStreamLine("translateYdistToDegrees(%f, %f)", translateYdist, gearSizeY);
-	return round(translateYdist * gearSizeY);
-}
-
-void moveMotorYAxis(long translateYdistToDegrees){
-	writeDebugStreamLine("moveMotorYAxis: y:%d", translateYdistToDegrees);
-#ifndef DISABLE_MOTORS
-	moveMotorTarget(y_axis, translateYdistToDegrees, 50); // move motor "y_axis_val" at 50% power.
-#endif
-	return;
-}
-
-//------------------------------------------------------------------------------------
-
-
-float translateZdist(float z){
-
-	writeDebugStreamLine("translateZdist:: Successful");
-
-	float deltaPosition = (zAxisPosition - z) * -1;
-	zAxisPosition = z;
-	return deltaPosition;
-}
-
-long translateZdistToDegrees(float translateZdist, long gearSizeZ){
-	return round(translateZdist * gearSizeZ); // placeholder.
-}
-
-void moveMotorZAxis(long z_degrees){
-	writeDebugStreamLine("moveMotorZAxis: z:%d", z_degrees);
-#ifndef DISABLE_MOTORS
-	moveMotorTarget(z_axis, z_degrees, 50);
-#endif
-	return;
-}
 
 //------------------------------------------------------------------------------------
 
@@ -239,6 +189,8 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 	}
 }
 
+
+// Read and parse the next line from file and retrieve the various parameters, if present
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f)
 {
 	char currCmdBuff[16];
@@ -247,7 +199,7 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 	float currCmdVal = 0;
 
 	x = y = z = e = f = noParam;
-
+	writeDebugStreamLine("\n----------    NEXT COMMAND   -------");
 	writeDebugStreamLine("Processing: %s", cmd);
 
 	// Clear the currCmdBuff
@@ -288,34 +240,34 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 	return true;
 }
 
+// Use parameters gathered from command to move the motors, extrude, that sort of thing
 void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 {
-	long x_degrees; // Are these prototyping for functions?
-	long y_degrees;
-	long z_degrees;
+	float motorDegrees; 	// Amount the motor has to move
+	float deltaPosition;	// The difference between the current position and the one we want to move to
 
 	// execute functions inside this algorithm
 	if (strcmp(gcmd, "G1") == 0 ){
 
 		if(x != noParam){
-			translateXdist(x);
-			x_degrees = translateXdistToDegrees(translateXdist(x), gearSizeX);
-			moveMotorXAxis(x_degrees);
-			writeDebugStreamLine("moveMotorXAxis(%d)", x_degrees);
+			writeDebugStreamLine("\n----------    X AXIS   -------------");
+			deltaPosition = calcDeltaDistance(xAxisPosition, x);
+			motorDegrees = calcMotorDegrees(deltaPosition, gearSizeX);
+			moveMotorAxis(x_axis, motorDegrees);
 		}
 
 		if(y != noParam){
-			translateYdist(y);
-			y_degrees = translateYdistToDegrees(translateYdist(y), gearSizeY);
-			moveMotorYAxis(y_degrees);
-			writeDebugStreamLine("moveMotorYAxis(%d)", y_degrees);
+			writeDebugStreamLine("\n----------    Y AXIS   -------------");
+			deltaPosition = calcDeltaDistance(yAxisPosition, y);
+			motorDegrees = calcMotorDegrees(deltaPosition, gearSizeY);
+			moveMotorAxis(y_axis, motorDegrees);
 		}
 
 		if(z != noParam){
-			translateZdist(z);
-			z_degrees = translateZdistToDegrees(translateZdist(z), gearSizeZ);
-			moveMotorZAxis(z_degrees);
-			writeDebugStreamLine("moveMotorZAxis(%d)", z_degrees);
+			writeDebugStreamLine("\n----------    Z AXIS   -------------");
+			deltaPosition = calcDeltaDistance(zAxisPosition, z);
+			motorDegrees = calcMotorDegrees(deltaPosition, gearSizeZ);
+			moveMotorAxis(z_axis, motorDegrees);
 		}
 
 #ifndef DISABLE_MOTORS

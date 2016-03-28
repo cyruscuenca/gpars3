@@ -9,7 +9,8 @@
 // Comment out the line below if you want the motors to run
 #define DISABLE_MOTORS
 
-const char *fileName = "gcode.txt"; // name of the file it'll be reading
+// name of the file it'll be reading
+const char *fileName = "gcode.txt";
 
 // You need some kind of value here that will never be used in your g-code
 const float noParam = -255;

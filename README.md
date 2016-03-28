@@ -1,5 +1,7 @@
 # G-PARS3
 
+![image one](/media/img1.jpg)
+
 A LEGO MINDSTORMS g-code parser written with ROBOTC.
 (a suite of functions to program LEGO robots).
 

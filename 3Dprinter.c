@@ -51,13 +51,13 @@ float yAxisPosition = 128;
 
 float zAxisPosition = 120;
 
-//this is where you specify gear sized for each axis
+//this is where you specify the degrees to mm so the program can compensate properly
 
-long gearSizeX = 8;
+long XdegreesToMM = 8;
 
-long gearSizeY = 8;
+long YdegreesToMM = 8;
 
-long gearSizeZ = 8;
+long ZdegreesToMM = 8;
 
 //------------------------------------------------------------------------------------
 
@@ -254,21 +254,21 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 		if(x != noParam){
 			writeDebugStreamLine("\n----------    X AXIS   -------------");
 			deltaPosition = calcDeltaDistance(xAxisPosition, x);
-			motorDegrees = calcMotorDegrees(deltaPosition, gearSizeX);
+			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
 			moveMotorAxis(x_axis, motorDegrees);
 		}
 
 		if(y != noParam){
 			writeDebugStreamLine("\n----------    Y AXIS   -------------");
 			deltaPosition = calcDeltaDistance(yAxisPosition, y);
-			motorDegrees = calcMotorDegrees(deltaPosition, gearSizeY);
+			motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
 			moveMotorAxis(y_axis, motorDegrees);
 		}
 
 		if(z != noParam){
 			writeDebugStreamLine("\n----------    Z AXIS   -------------");
 			deltaPosition = calcDeltaDistance(zAxisPosition, z);
-			motorDegrees = calcMotorDegrees(deltaPosition, gearSizeZ);
+			motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
 			moveMotorAxis(z_axis, motorDegrees);
 		}
 

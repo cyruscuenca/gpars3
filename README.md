@@ -9,8 +9,13 @@ Check out: http://robotc.net
 
 //-----------------------------------------
 
-This parser is for a LEGO 3D printer I'm making. I don't have a working program yet. 
-Feel free to look at my code and give me pointers! I'm a noob.
+This parser is for a LEGO 3D printer I'm making. 
+The program is for LEGO 3D printers that use the Cartesian Coordinate System
+https://en.wikipedia.org/wiki/Cartesian_coordinate_system
+
+//-----------------------------------------
+
+I don't have a working program yet. Feel free to look at my code and give me pointers! I'm a noob.
 
 //-----------------------------------------
 

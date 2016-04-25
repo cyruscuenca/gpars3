@@ -10,7 +10,7 @@
 // Comment out the line below if you want the motors to run
 //#define DISABLE_MOTORS
 
-// name of the file it'll be reading
+// Name of the file it'll be reading
 const char *fileName = "gcode.txt";
 
 // You need some kind of value here that will never be used in your g-code
@@ -41,9 +41,7 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 void executeCommand(string gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
 
-//------------------------------------------------------------------------------------
-
-//this is where you specify your build area
+//This is where you specify your build area
 
 float xAxisPosition = 0;
 
@@ -51,7 +49,7 @@ float yAxisPosition = 0;
 
 float zAxisPosition = 0;
 
-//this is where you specify the degrees to mm so the program can compensate properly
+//This is where you specify the degrees to mm so the program can compensate properly
 
 long XdegreesToMM = 13;
 
@@ -59,35 +57,34 @@ long YdegreesToMM = 13;
 
 long ZdegreesToMM = 16;
 
-//------------------------------------------------------------------------------------
-
 task main()
 {
-	// Clear all text from the debugstream window
+	// Clear all text from the debugstream window.
 	clearDebugStream();
 
-	//sets LED to flash to show that the printer is printing
+	//sets LED to flash to show that the printer is printing.
 	setLEDColor(ledRed);
 
-	//credits
-	displayCenteredTextLine(0, "Made by Xander Soldaat and Cyrus Cuenca");
-	//verion number
-	displayCenteredTextLine(1, "Version 1.0");
+	//Credits
+	displayCenteredTextLine(2, "Made by Xander Soldaat");
+	displayCenteredTextLine(4, "and Cyrus Cuenca");
+	//Verion number
+	displayCenteredTextLine(6, "Version 1.0");
 	//GitHub link
-	displayCenteredTextLine(2, "http://github.com/cyruscuenca/g-pars3");
-	//supported commands
-	displayCenteredTextLine(3, "Supported commands: G1");
+	displayCenteredTextLine(8, "http://github.com/cyruscuenca/g-pars3");
+	//Supported commands
+	displayCenteredTextLine(10, "Supported commands: G1");
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
 	char buffer[128];
 	long lineLength = 0;
 
-	string gcmd = "G1"; // always a g1
+	string gcmd = "G1";
 
-	fd = fileOpenRead(fileName); // fileName = gcode.rtf
+	fd = fileOpenRead(fileName); // fileName = gcode.txt
 
-	if (fd < 0) // if file is not found/cannot open
+	if (fd < 0) // If the file is not found/cannot open
 	{
 		writeDebugStreamLine("Could not open %s", fileName);
 		return;
@@ -97,23 +94,22 @@ task main()
 		lineLength = readLine(fd, buffer, 128);
 		if (lineLength > 0)
 		{
-			readNextCommand(buffer, lineLength, x, y, z, e, f); // do these functions
+			readNextCommand(buffer, lineLength, x, y, z, e, f);
 			executeCommand(gcmd, x, y, z, e, f);
 		}
 		else
-			// we're done, no lines left to read from the file
+			// We're done, no lines left to read from the file.
 		return;
 
-		// Wipe the buffer by setting its contents to 0
+		// Wipe the buffer by setting its contents to 0.
 		memset(buffer, 0, sizeof(buffer));
 
-		//LED turns green to show that the print is done
+		//LED turns green to show that the print is done.
 		setLEDColor(ledGreen);
 
 	}
 }
 
-//-------------------------------------------------------------------------------------
 #ifndef DISABLE_MOTORS
 void waitForMotors(){
 	while(getMotorRunning(x_axis) || getMotorRunning(y_axis) || getMotorRunning(z_axis)){
@@ -127,8 +123,6 @@ void waitForMotors(){
 //		moveMotorTarget(x_axis, 1, 30); //incomplete
 //	return;
 //}
-
-//------------------------------------------------------------------------------------
 
 // Calculate the distance (delta) from the current position to the new one
 // and update the current position
@@ -170,10 +164,6 @@ void moveMotorAxis(tMotor axis, float degrees)
 	return;
 }
 
-//------------------------------------------------------------------------------------
-
-// We're passed a single command, like "G1" or "X12.456"
-// We need to split it up and pick the value type (X, or Y, etc) and float value out of it.
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 {
 	// This is the default value

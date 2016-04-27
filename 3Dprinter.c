@@ -35,13 +35,12 @@ void waitForMotors();
 float calcDeltaDistance(float &currentPosition, float newPosition);
 float calcMotorDegrees(float travelDistance, long gearSize);
 void moveMotorAxis(tMotor axis, float degrees);
+void calcMotorPower(float x, float y);
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(string gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
-
-//------------------------------------------------------------------------------------
 
 //this is where you specify your build area
 
@@ -53,13 +52,17 @@ float zAxisPosition = 0;
 
 //this is where you specify the degrees to mm so the program can compensate properly
 
-long XdegreesToMM = 13;
+long XdegreesToMM = 8;
 
-long YdegreesToMM = 13;
+long YdegreesToMM = 8;
 
-long ZdegreesToMM = 16;
+long ZdegreesToMM = 8;
 
-//------------------------------------------------------------------------------------
+//is used to divide powerX and powerY
+
+int powerX = 13;
+
+int powerY = 13;
 
 task main()
 {
@@ -70,13 +73,14 @@ task main()
 	setLEDColor(ledRed);
 
 	//credits
-	displayCenteredTextLine(0, "Made by Xander Soldaat and Cyrus Cuenca");
+	displayCenteredTextLine(2, "Made by Xander Soldaat");
+	displayCenteredTextLine(4, "and Cyrus Cuenca");
 	//verion number
-	displayCenteredTextLine(1, "Version 1.0");
+	displayCenteredTextLine(6, "Version 1.1");
 	//GitHub link
-	displayCenteredTextLine(2, "http://github.com/cyruscuenca/g-pars3");
+	displayCenteredTextLine(8, "http://github.com/cyruscuenca/g-pars3");
 	//supported commands
-	displayCenteredTextLine(3, "Supported commands: G1");
+	displayCenteredTextLine(10, "Supported commands: G1");
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -97,7 +101,7 @@ task main()
 		lineLength = readLine(fd, buffer, 128);
 		if (lineLength > 0)
 		{
-			readNextCommand(buffer, lineLength, x, y, z, e, f); // do these functions
+			readNextCommand(buffer, lineLength, x, y, z, e, f);
 			executeCommand(gcmd, x, y, z, e, f);
 		}
 		else
@@ -113,7 +117,6 @@ task main()
 	}
 }
 
-//-------------------------------------------------------------------------------------
 #ifndef DISABLE_MOTORS
 void waitForMotors(){
 	while(getMotorRunning(x_axis) || getMotorRunning(y_axis) || getMotorRunning(z_axis)){
@@ -128,19 +131,26 @@ void waitForMotors(){
 //	return;
 //}
 
-//------------------------------------------------------------------------------------
-
 // Calculate the distance (delta) from the current position to the new one
 // and update the current position
 float calcDeltaDistance(float &currentPosition, float newPosition){
 
 	writeDebugStreamLine("calcDeltaDistance(%f, %f)", currentPosition, newPosition);
 
+
 	float deltaPosition = newPosition - currentPosition;
 	writeDebugStreamLine("deltaPosition: %f", deltaPosition);
 	currentPosition = newPosition;
 	writeDebugStreamLine("Updated currentPosition: %f", currentPosition);
 	return deltaPosition;
+}
+
+void calcMotorPower(float x, float y){
+
+	if (x && y < 0){
+		powerX = x / y;
+	}
+return;
 }
 
 // Calculate the degrees the motor has to turn, using provided gear size
@@ -153,7 +163,7 @@ float calcMotorDegrees(float travelDistance, long gearSize)
 // Wrapper to move the motor, provides additional debugging feedback
 void moveMotorAxis(tMotor axis, float degrees)
 {
-	writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f", axis, degrees);
+writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
 
 // SPEED PARAM
@@ -169,8 +179,6 @@ void moveMotorAxis(tMotor axis, float degrees)
 #endif
 	return;
 }
-
-//------------------------------------------------------------------------------------
 
 // We're passed a single command, like "G1" or "X12.456"
 // We need to split it up and pick the value type (X, or Y, etc) and float value out of it.

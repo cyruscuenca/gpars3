@@ -34,7 +34,7 @@ void waitForMotors();
 
 float calcDeltaDistance(float &currentPosition, float newPosition);
 float calcMotorDegrees(float travelDistance, long gearSize);
-void moveMotorAxis(tMotor axis, float degrees);
+void moveMotorAxis(tMotor axis, float degrees, long speed);
 void calcMotorPower(float x, float y);
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
@@ -57,6 +57,11 @@ long XdegreesToMM = 8;
 long YdegreesToMM = 8;
 
 long ZdegreesToMM = 8;
+
+// This is where you specify the axis specific motor speeds
+long xAxisSpeed = 50;
+long yAxisSpeed = 50;
+long zAxisSpeed = 50;
 
 //is used to divide powerX and powerY
 
@@ -161,18 +166,18 @@ float calcMotorDegrees(float travelDistance, long gearSize)
 }
 
 // Wrapper to move the motor, provides additional debugging feedback
-void moveMotorAxis(tMotor axis, float degrees)
+void moveMotorAxis(tMotor axis, float degrees, long speed)
 {
-writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f", axis, degrees);
+writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f, speed: %d", axis, degrees, speed);
 #ifndef DISABLE_MOTORS
 
 // SPEED PARAM
-	long motorSpeed = 25;
+	long motorSpeed = speed;
 	long degreesi = round(degrees);
 	if (degreesi < 0)
 	{
 		degreesi = abs(degreesi);
-		motorSpeed = -25;
+		motorSpeed = -speed;
 	}
 
 	moveMotorTarget(axis, degreesi, motorSpeed);
@@ -281,21 +286,21 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 			writeDebugStreamLine("\n----------    X AXIS   -------------");
 			deltaPosition = calcDeltaDistance(xAxisPosition, x);
 			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
-			moveMotorAxis(x_axis, motorDegrees);
+			moveMotorAxis(x_axis, motorDegrees, xAxisSpeed);
 		}
 
 		if(y != noParam){
 			writeDebugStreamLine("\n----------    Y AXIS   -------------");
 			deltaPosition = calcDeltaDistance(yAxisPosition, y);
 			motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
-			moveMotorAxis(y_axis, motorDegrees);
+			moveMotorAxis(y_axis, motorDegrees, yAxisSpeed);
 		}
 
 		if(z != noParam){
 			writeDebugStreamLine("\n----------    Z AXIS   -------------");
 			deltaPosition = calcDeltaDistance(zAxisPosition, z);
 			motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
-			moveMotorAxis(z_axis, motorDegrees);
+			moveMotorAxis(z_axis, motorDegrees, zAxisSpeed);
 		}
 
 #ifndef DISABLE_MOTORS

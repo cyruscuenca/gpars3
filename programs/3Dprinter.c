@@ -11,7 +11,7 @@
 //#define DISABLE_MOTORS
 
 // name of the file it'll be reading
-const char *fileName = "gcode.txt";
+const char *fileName = "gcode.rtf";
 
 // You need some kind of value here that will never be used in your g-code
 const float noParam = -255;
@@ -59,15 +59,9 @@ long YdegreesToMM = 8;
 long ZdegreesToMM = 8;
 
 // This is where you specify the axis specific motor speeds
-long xAxisSpeed = 50;
-long yAxisSpeed = 50;
-long zAxisSpeed = 50;
-
-//is used to divide powerX and powerY
-
-int powerX = 13;
-
-int powerY = 13;
+long xAxisSpeed = 15;
+long yAxisSpeed = 15;
+long zAxisSpeed = 15;
 
 task main()
 {
@@ -136,6 +130,14 @@ void waitForMotors(){
 //	return;
 //}
 
+void calcMotorPower(float x, float y){
+
+	if (x && y < 0){
+		xAxisSpeed = x / y;
+	}
+	return;
+}
+
 // Calculate the distance (delta) from the current position to the new one
 // and update the current position
 float calcDeltaDistance(float &currentPosition, float newPosition){
@@ -150,14 +152,6 @@ float calcDeltaDistance(float &currentPosition, float newPosition){
 	return deltaPosition;
 }
 
-void calcMotorPower(float x, float y){
-
-	if (x && y < 0){
-		powerX = x / y;
-	}
-return;
-}
-
 // Calculate the degrees the motor has to turn, using provided gear size
 float calcMotorDegrees(float travelDistance, long gearSize)
 {
@@ -168,10 +162,10 @@ float calcMotorDegrees(float travelDistance, long gearSize)
 // Wrapper to move the motor, provides additional debugging feedback
 void moveMotorAxis(tMotor axis, float degrees, long speed)
 {
-writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f, speed: %d", axis, degrees, speed);
+	writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f, speed: %d", axis, degrees, speed);
 #ifndef DISABLE_MOTORS
 
-// SPEED PARAM
+	// SPEED PARAM
 	long motorSpeed = speed;
 	long degreesi = round(degrees);
 	if (degreesi < 0)
@@ -284,6 +278,7 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 
 		if(x != noParam){
 			writeDebugStreamLine("\n----------    X AXIS   -------------");
+			calcMotorPower(x, y);
 			deltaPosition = calcDeltaDistance(xAxisPosition, x);
 			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
 			moveMotorAxis(x_axis, motorDegrees, xAxisSpeed);

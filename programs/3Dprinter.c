@@ -35,7 +35,7 @@ void waitForMotors();
 float calcDeltaDistance(float &currentPosition, float newPosition);
 float calcMotorDegrees(float travelDistance, long gearSize);
 void moveMotorAxis(tMotor axis, float degrees, long speed);
-void calcMotorPower(float x, float y);
+long calcMotorPower(float x, float y);
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
@@ -59,8 +59,8 @@ long YdegreesToMM = 8;
 long ZdegreesToMM = 8;
 
 // This is where you specify the axis specific motor speeds
-long xAxisSpeed = 15;
-long yAxisSpeed = 15;
+long setXSpeed = 15;
+long setYSpeed = 15;
 long zAxisSpeed = 15;
 
 task main()
@@ -130,12 +130,12 @@ void waitForMotors(){
 //	return;
 //}
 
-void calcMotorPower(float x, float y){
-
-	if (x && y < 0){
-		xAxisSpeed = x / y;
+long calcMotorPower(float x, float y){
+	long speed = 0;
+	if ((x > 0) && (y > 0)){
+		speed = (x / y);
 	}
-	return;
+	return speed;
 }
 
 // Calculate the distance (delta) from the current position to the new one
@@ -278,17 +278,20 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 
 		if(x != noParam){
 			writeDebugStreamLine("\n----------    X AXIS   -------------");
-			calcMotorPower(x, y);
+			long xPower = setXSpeed * calcMotorPower(x, y);
 			deltaPosition = calcDeltaDistance(xAxisPosition, x);
 			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
-			moveMotorAxis(x_axis, motorDegrees, xAxisSpeed);
+			moveMotorAxis(x_axis, motorDegrees, xPower);
+			xPower = setXSpeed;
 		}
 
 		if(y != noParam){
 			writeDebugStreamLine("\n----------    Y AXIS   -------------");
+			long yPower = setYSpeed * calcMotorPower(x, y);
 			deltaPosition = calcDeltaDistance(yAxisPosition, y);
 			motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
-			moveMotorAxis(y_axis, motorDegrees, yAxisSpeed);
+			moveMotorAxis(y_axis, motorDegrees, yPower);
+			yPower = setYSpeed;
 		}
 
 		if(z != noParam){

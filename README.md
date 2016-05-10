@@ -5,7 +5,7 @@
 A LEGO MINDSTORMS g-code parser written with ROBOTC
 (a suite of functions to program LEGO robots).
 
-![image one](https://github.com/cyruscuenca/g-pars3/blob/master/media/3Dprinter_video.jpg)
+![image one](https://github.com/cyruscuenca/g-pars3/blob/master/media/3Dprinter_video.png)
 https://www.youtube.com/watch?v=ibm2scWGx3Q
 
 This parser is for a LEGO 3D printer I'm making. 

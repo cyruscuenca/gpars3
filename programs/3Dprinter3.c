@@ -10,6 +10,9 @@
 // Comment out the line below if you want the motors to run
 //#define DISABLE_MOTORS
 
+// name of the file it'll be reading
+const char *fileName = "gcode.txt";
+
 // You need some kind of value here that will never be used in your g-code
 const float noParam = -255;
 
@@ -24,42 +27,37 @@ typedef enum tCmdType
 	G1_F,
 } tCmdType;
 
+
 #ifndef DISABLE_MOTORS
 void waitForMotors();
 #endif
 
 float calcDeltaDistance(float &currentPosition, float newPosition);
 float calcMotorDegrees(float travelDistance, long gearSize);
-void moveMotorAxis(tMotor axis, float degrees, long speed);
-long calcMotorPower(float x, float y, float z);
+void moveMotorAxis(tMotor axis, float degrees);
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(string gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
 
-//========
+//------------------------------------------------------------------------------------
 
-// File name
-const char *fileName = "gcode.txt";
+float xAxisPosition = 56.691;
 
-//What is the starting position of you prints?
-float xAxisPosition = 0;
-float yAxisPosition = 0;
-float zAxisPosition = 0;
+float yAxisPosition = 69.378;
 
-//How many degrees does you motor need to move for
-//the print plate or head to move 1 mm?
-long XdegreesToMM = 6;
-long YdegreesToMM = 6;
-long ZdegreesToMM = 6;
+float zAxisPosition = 122.200;
 
-//What power setting gives you a consistent flow?
-long setXSpeed = 9;
-long setYSpeed = 9;
-long setZSpeed = 9;
+//this is where you specify the degrees to mm so the program can compensate properly
 
-//================================
+long XdegreesToMM = 8;
+
+long YdegreesToMM = 8;
+
+long ZdegreesToMM = 8;
+
+//------------------------------------------------------------------------------------
 
 task main()
 {
@@ -70,14 +68,13 @@ task main()
 	setLEDColor(ledRed);
 
 	//credits
-	displayCenteredTextLine(2, "Made by Xander Soldaat");
-	displayCenteredTextLine(4, "and Cyrus Cuenca");
+	displayCenteredTextLine(0, "Made by Xander Soldaat and Cyrus Cuenca");
 	//verion number
-	displayCenteredTextLine(6, "Version 1.1");
+	displayCenteredTextLine(1, "Version 1.0");
 	//GitHub link
-	displayCenteredTextLine(8, "http://github.com/cyruscuenca/g-pars3");
+	displayCenteredTextLine(2, "http://github.com/cyruscuenca/g-pars3");
 	//supported commands
-	displayCenteredTextLine(10, "Supported commands: G1");
+	displayCenteredTextLine(3, "Supported commands: G1");
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -98,7 +95,7 @@ task main()
 		lineLength = readLine(fd, buffer, 128);
 		if (lineLength > 0)
 		{
-			readNextCommand(buffer, lineLength, x, y, z, e, f);
+			readNextCommand(buffer, lineLength, x, y, z, e, f); // do these functions
 			executeCommand(gcmd, x, y, z, e, f);
 		}
 		else
@@ -128,26 +125,11 @@ void waitForMotors(){
 //	return;
 //}
 
-long calcMotorPower(float x, float y, float z){
-	long speed = 0;
-	if ((x > 0) && (y > 0)){
-		speed = (x / y);
-	}
-	else if(x > 0 && y == 0){
-		speed = setXSpeed;
-	}
-	else if(z > 0){
-		speed = setZSpeed;
-	}
-	return speed;
-}
-
 // Calculate the distance (delta) from the current position to the new one
 // and update the current position
 float calcDeltaDistance(float &currentPosition, float newPosition){
 
 	writeDebugStreamLine("calcDeltaDistance(%f, %f)", currentPosition, newPosition);
-
 
 	float deltaPosition = newPosition - currentPosition;
 	writeDebugStreamLine("deltaPosition: %f", deltaPosition);
@@ -164,22 +146,26 @@ float calcMotorDegrees(float travelDistance, long gearSize)
 }
 
 // Wrapper to move the motor, provides additional debugging feedback
-void moveMotorAxis(tMotor axis, float degrees, long speed){
-	writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f, speed: %d", axis, degrees, speed);
+void moveMotorAxis(tMotor axis, float degrees)
+{
+	writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
-	// SPEED PARAM
-	long motorSpeed = speed;
+
+// SPEED PARAM
+	long motorSpeed = 10;
 	long degreesi = round(degrees);
 	if (degreesi < 0)
 	{
 		degreesi = abs(degreesi);
-		motorSpeed = -speed;
+		motorSpeed = -10;
 	}
 
 	moveMotorTarget(axis, degreesi, motorSpeed);
 #endif
 	return;
 }
+
+//------------------------------------------------------------------------------------
 
 // We're passed a single command, like "G1" or "X12.456"
 // We need to split it up and pick the value type (X, or Y, etc) and float value out of it.
@@ -280,28 +266,23 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 
 		if(x != noParam){
 			writeDebugStreamLine("\n----------    X AXIS   -------------");
-			long xPower = setXSpeed * calcMotorPower(x, y, z);
 			deltaPosition = calcDeltaDistance(xAxisPosition, x);
 			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
-			moveMotorAxis(x_axis, motorDegrees, xPower);
-			xPower = setXSpeed;
+			moveMotorAxis(x_axis, motorDegrees);
 		}
 
 		if(y != noParam){
 			writeDebugStreamLine("\n----------    Y AXIS   -------------");
-			long yPower = setYSpeed;
 			deltaPosition = calcDeltaDistance(yAxisPosition, y);
 			motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
-			moveMotorAxis(y_axis, motorDegrees, yPower);
-			yPower = setYSpeed;
+			moveMotorAxis(y_axis, motorDegrees);
 		}
 
 		if(z != noParam){
 			writeDebugStreamLine("\n----------    Z AXIS   -------------");
-			long zPower = calcMotorPower(x, y, z);
 			deltaPosition = calcDeltaDistance(zAxisPosition, z);
 			motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
-			moveMotorAxis(z_axis, motorDegrees, zPower);
+			moveMotorAxis(z_axis, motorDegrees);
 		}
 
 #ifndef DISABLE_MOTORS

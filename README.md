@@ -2,17 +2,37 @@
 
 ![image one](https://github.com/cyruscuenca/g-pars3/blob/master/media/3Dprinter_header.jpg)
 
-A LEGO MINDSTORMS g-code parser written with ROBOTC
-(a suite of functions to program LEGO robots).
 
-![image one](https://github.com/cyruscuenca/g-pars3/blob/master/media/3Dprinter_video.png)
+## Description
+This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. 
+
 https://www.youtube.com/watch?v=ibm2scWGx3Q
 
-This parser is for a LEGO 3D printer I'm making. 
-The program is for LEGO 3D printers that use the Cartesian Coordinate System
-https://en.wikipedia.org/wiki/Cartesian_coordinate_system
+## Configuration
+All of the config variables are located between line 45 and 70.
 
-This program is being worked on by Xander Soldaat: http://botbench.com
-and myself: http://cyruscuenca.blogspot.com
+```
+This is where you specify your starting position(default 0).
+float xAxisPosition = 0;
+float yAxisPosition = 0;
+float zAxisPosition = 0;
 
-I don't have a working program yet. Feel free to look at my code and give me pointers! I'm a noob.
+//This is where you specify the degrees to mm so the program can compensate properlydefault 8).
+
+long XdegreesToMM = 8;
+long YdegreesToMM = 8;
+long ZdegreesToMM = 8;
+```
+
+Specify your degrees to mm if you're not using the linear actuator modules I am in the second block of variables. 
+
+Specify your starting position if you don't want to start at 0, 0, and 0.
+
+## Credits
+Cyrus Cuenca(me): http://cyruscuenca.blogspot.com
+Xander Soldaat: http://botbench.com
+Marc-Andre-Bazergui: http:bazmac.ca
+
+## License
+Creative Commons Attribution-NonCommercial 4.0 International Public License
+[read the LICENSE.md]

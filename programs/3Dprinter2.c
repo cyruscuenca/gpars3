@@ -33,8 +33,8 @@ void waitForMotors();
 #endif
 
 float calcDeltaDistance(float &currentPosition, float newPosition);
-float calcMotorrawDegrees(float travelDistance, long gearSize);
-void moveMotorAxis(tMotor axis, float rawDegrees);
+float calcMotorDegrees(float travelDistance, long gearSize);
+void moveMotorAxis(tMotor axis, float degrees);
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
@@ -54,24 +54,28 @@ float zAxisPosition = 0;
 
 //this is where you specify the degrees to mm so the program can compensate properly
 
-long XrawDegreesToMM = 8;
+long XdegreesToMM = 8;
 
-long YrawDegreesToMM = 8;
+long YdegreesToMM = 8;
 
-long ZrawDegreesToMM = 8;
+long ZdegreesToMM = 8;
 //------------------------------------------------------------------------------------
 
-task main(){
+task main()
+{
+	// Clear all text from the debugstream window
 	clearDebugStream();
+
+	//sets LED to flash to show that the printer is printing
 	setLEDColor(ledRed);
 
-	//Credits
+	//credits
 	displayCenteredTextLine(0, "Made by Xander Soldaat and Cyrus Cuenca");
-	//Verion number
+	//verion number
 	displayCenteredTextLine(1, "Version 1.0");
 	//GitHub link
 	displayCenteredTextLine(2, "http://github.com/cyruscuenca/g-pars3");
-	//Supported commands
+	//supported commands
 	displayCenteredTextLine(3, "Supported commands: G1");
 
 	float x, y, z, e, f = 0.0;
@@ -137,22 +141,20 @@ float calcDeltaDistance(float &currentPosition, float newPosition){
 }
 
 // Calculate the degrees the motor has to turn, using provided gear size
-float calcMotorrawDegrees(float travelDistance, long gearSize)
+float calcMotorDegrees(float travelDistance, long gearSize)
 {
-	writeDebugStreamLine("calcMotorrawDegrees(%f, %f)", travelDistance, gearSize);
+	writeDebugStreamLine("calcMotorDegrees(%f, %f)", travelDistance, gearSize);
 	return travelDistance * gearSize;
 }
 
 // Wrapper to move the motor, provides additional debugging feedback
-void moveMotorAxis(tMotor axis, float rawDegrees)
+void moveMotorAxis(tMotor axis, float degrees)
 {
-	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f", axis, rawDegrees);
+	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
-
-	// SPEED PARAM
 	long motorSpeed = 11;
-	long roundedDegrees = round(rawDegrees);
-	degBuff = rawDegrees - roundedDegrees + degBuff;
+	long roundedDegrees = round(degrees);
+	degBuff = degrees - roundedDegrees + degBuff;
 
 	if (roundedDegrees < 0)
 	{
@@ -264,7 +266,7 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 // Use parameters gathered from command to move the motors, extrude, that sort of thing
 void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 {
-	float motorrawDegrees; 	// Amount the motor has to move
+	float motorDegrees; 	// Amount the motor has to move
 	float deltaPosition;	// The difference between the current position and the one we want to move to
 
 	// execute functions inside this algorithm
@@ -273,22 +275,22 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 		if(x != noParam){
 			writeDebugStreamLine("\n----------    X AXIS   -------------");
 			deltaPosition = calcDeltaDistance(xAxisPosition, x);
-			motorrawDegrees = calcMotorrawDegrees(deltaPosition, XrawDegreesToMM);
-			moveMotorAxis(x_axis, motorrawDegrees);
+			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
+			moveMotorAxis(x_axis, motorDegrees);
 		}
 
 		if(y != noParam){
 			writeDebugStreamLine("\n----------    Y AXIS   -------------");
 			deltaPosition = calcDeltaDistance(yAxisPosition, y);
-			motorrawDegrees = calcMotorrawDegrees(deltaPosition, YrawDegreesToMM);
-			moveMotorAxis(y_axis, motorrawDegrees);
+			motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
+			moveMotorAxis(y_axis, motorDegrees);
 		}
 
 		if(z != noParam){
 			writeDebugStreamLine("\n----------    Z AXIS   -------------");
 			deltaPosition = calcDeltaDistance(zAxisPosition, z);
-			motorrawDegrees = calcMotorrawDegrees(deltaPosition, ZrawDegreesToMM);
-			moveMotorAxis(z_axis, motorrawDegrees);
+			motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
+			moveMotorAxis(z_axis, motorDegrees);
 		}
 
 #ifndef DISABLE_MOTORS

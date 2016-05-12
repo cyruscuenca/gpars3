@@ -4,11 +4,13 @@
 
 
 ## Description
+
 This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. 
 
 https://www.youtube.com/watch?v=ibm2scWGx3Q
 
 ## Configuration
+
 All of the config variables are located between line 45 and 70.
 
 ```
@@ -29,10 +31,14 @@ Specify your degrees to mm if you're not using the linear actuator modules I am 
 Specify your starting position if you don't want to start at 0, 0, and 0.
 
 ## Credits
+
 Cyrus Cuenca(me): http://cyruscuenca.blogspot.com
+
 Xander Soldaat: http://botbench.com
+
 Marc-Andre-Bazergui: http:bazmac.ca
 
 ## License
+
 Creative Commons Attribution-NonCommercial 4.0 International Public License
 [read the LICENSE.md]

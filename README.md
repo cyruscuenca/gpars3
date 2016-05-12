@@ -19,7 +19,7 @@ float xAxisPosition = 0;
 float yAxisPosition = 0;
 float zAxisPosition = 0;
 
-//This is where you specify the degrees to mm so the program can compensate properlydefault 8).
+//This is where you specify the degrees to mm so the program can compensate properly(default 8).
 
 long XdegreesToMM = 8;
 long YdegreesToMM = 8;

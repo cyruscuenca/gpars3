@@ -23,7 +23,7 @@ This is the usual format of G1 and G0 commands:
 
 G1 Xnnn Ynnn Znnn Ennn Fnnn Snnn
 
-At least one pereameter must be present.
+At least one parameter must be present.
 
 X = X axis
 

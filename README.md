@@ -36,7 +36,7 @@ Cyrus Cuenca(me): http://cyruscuenca.blogspot.com
 
 Xander Soldaat: http://botbench.com
 
-Marc-Andre-Bazergui: http://bazmac.ca
+Marc-Andre-Bazergui: http://bazmarc.ca
 
 ## License
 

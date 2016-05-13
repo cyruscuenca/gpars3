@@ -7,6 +7,8 @@
 
 This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. 
 
+https://www.youtube.com/watch?v=tOh7TetkVZM
+
 https://www.youtube.com/watch?v=ibm2scWGx3Q
 
 ## Configuration

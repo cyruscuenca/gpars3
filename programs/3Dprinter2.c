@@ -60,9 +60,7 @@ long YdegreesToMM = 8;
 
 long ZdegreesToMM = 8;
 //------------------------------------------------------------------------------------
-
-task main()
-{
+task main(){
 	// Clear all text from the debugstream window
 	clearDebugStream();
 
@@ -70,13 +68,13 @@ task main()
 	setLEDColor(ledRed);
 
 	//credits
-	displayCenteredTextLine(0, "Made by Xander Soldaat and Cyrus Cuenca");
+	displayCenteredTextLine(1, "Made by Xander Soldaat and Cyrus Cuenca");
 	//verion number
-	displayCenteredTextLine(1, "Version 1.0");
+	displayCenteredTextLine(3, "Version 1.0");
 	//GitHub link
-	displayCenteredTextLine(2, "http://github.com/cyruscuenca/g-pars3");
+	displayCenteredTextLine(5, "http://github.com/cyruscuenca/g-pars3");
 	//supported commands
-	displayCenteredTextLine(3, "Supported commands: G1");
+	displayCenteredTextLine(7, "Supported commands: G1");
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -152,22 +150,19 @@ void moveMotorAxis(tMotor axis, float degrees)
 {
 	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
-	long motorSpeed = 11;
+	long motorSpeed = 10;
 	long roundedDegrees = round(degrees);
 	degBuff = degrees - roundedDegrees + degBuff;
-
 	if (roundedDegrees < 0)
 	{
 		roundedDegrees = abs(roundedDegrees);
-		motorSpeed = -11;
+		motorSpeed = -10;
 	}
 	if (degBuff > 1 || degBuff < -1){
 		int degBuffRounded = round(degBuff);
 		roundedDegrees = roundedDegrees + degBuffRounded;
 		degBuff = degBuff - degBuffRounded;
 	}
-
-
 	moveMotorTarget(axis, roundedDegrees, motorSpeed);
 #endif
 	return;

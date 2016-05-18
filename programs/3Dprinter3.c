@@ -40,14 +40,17 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(string gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
+long degBuff = 0;
 
 //------------------------------------------------------------------------------------
 
-float xAxisPosition = 56.691;
+//this is where you specify your build area
 
-float yAxisPosition = 69.378;
+float xAxisPosition = 0;
 
-float zAxisPosition = 122.200;
+float yAxisPosition = 0;
+
+float zAxisPosition = 0;
 
 //this is where you specify the degrees to mm so the program can compensate properly
 
@@ -56,11 +59,8 @@ long XdegreesToMM = 8;
 long YdegreesToMM = 8;
 
 long ZdegreesToMM = 8;
-
 //------------------------------------------------------------------------------------
-
-task main()
-{
+task main(){
 	// Clear all text from the debugstream window
 	clearDebugStream();
 
@@ -68,13 +68,13 @@ task main()
 	setLEDColor(ledRed);
 
 	//credits
-	displayCenteredTextLine(0, "Made by Xander Soldaat and Cyrus Cuenca");
+	displayCenteredTextLine(1, "Made by Xander Soldaat and Cyrus Cuenca");
 	//verion number
-	displayCenteredTextLine(1, "Version 1.0");
+	displayCenteredTextLine(3, "Version 1.0");
 	//GitHub link
-	displayCenteredTextLine(2, "http://github.com/cyruscuenca/g-pars3");
+	displayCenteredTextLine(5, "http://github.com/cyruscuenca/g-pars3");
 	//supported commands
-	displayCenteredTextLine(3, "Supported commands: G1");
+	displayCenteredTextLine(7, "Supported commands: G1");
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -148,19 +148,22 @@ float calcMotorDegrees(float travelDistance, long gearSize)
 // Wrapper to move the motor, provides additional debugging feedback
 void moveMotorAxis(tMotor axis, float degrees)
 {
-	writeDebugStreamLine("moveMotorAxis: motor: %d, degrees: %f", axis, degrees);
+	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
-
-// SPEED PARAM
 	long motorSpeed = 10;
-	long degreesi = round(degrees);
-	if (degreesi < 0)
+	long roundedDegrees = round(degrees);
+	degBuff = degrees - roundedDegrees + degBuff;
+	if (roundedDegrees < 0)
 	{
-		degreesi = abs(degreesi);
+		roundedDegrees = abs(roundedDegrees);
 		motorSpeed = -10;
 	}
-
-	moveMotorTarget(axis, degreesi, motorSpeed);
+	if (degBuff > 1 || degBuff < -1){
+		int degBuffRounded = round(degBuff);
+		roundedDegrees = roundedDegrees + degBuffRounded;
+		degBuff = degBuff - degBuffRounded;
+	}
+	moveMotorTarget(axis, roundedDegrees, motorSpeed);
 #endif
 	return;
 }

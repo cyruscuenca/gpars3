@@ -282,7 +282,7 @@ void executeCommand(string gcmd, float x, float y, float z, float e, float f)
 		}
 
 		if(z != noParam){
-			writeDebugStreamLine("\n----------    Z AXIS   -------------");
+			writeDebugStreamLine("\n----------    Z AXIS  + -------------");
 			deltaPosition = calcDeltaDistance(zAxisPosition, z);
 			motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
 			moveMotorAxis(z_axis, motorDegrees);

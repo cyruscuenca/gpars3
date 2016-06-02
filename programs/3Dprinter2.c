@@ -36,11 +36,15 @@ float calcDeltaDistance(float &currentPosition, float newPosition);
 float calcMotorDegrees(float travelDistance, long gearSize);
 void moveMotorAxis(tMotor axis, float degrees);
 
+void startSeq();
+void endSeq();
+
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(string gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
 long degBuff = 0;
+
 
 //------------------------------------------------------------------------------------
 
@@ -59,22 +63,10 @@ long XdegreesToMM = 8;
 long YdegreesToMM = 8;
 
 long ZdegreesToMM = 8;
-//------------------------------------------------------------------------------------
+
 task main(){
-	// Clear all text from the debugstream window
 	clearDebugStream();
-
-	//sets LED to flash to show that the printer is printing
-	setLEDColor(ledRed);
-
-	//credits
-	displayCenteredTextLine(1, "Made by Xander Soldaat and Cyrus Cuenca");
-	//verion number
-	displayCenteredTextLine(3, "Version 1.0");
-	//GitHub link
-	displayCenteredTextLine(5, "http://github.com/cyruscuenca/g-pars3");
-	//supported commands
-	displayCenteredTextLine(7, "Supported commands: G1");
+	startSeq();
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -104,9 +96,7 @@ task main(){
 
 		// Wipe the buffer by setting its contents to 0
 		memset(buffer, 0, sizeof(buffer));
-
-		//LED turns green to show that the print is done
-		setLEDColor(ledGreen);
+		endSeq();
 
 	}
 }
@@ -118,12 +108,6 @@ void waitForMotors(){
 	}
 }
 #endif
-
-//void homeAllAxes(){
-//	while(getTouchValue(xAxisLimit)== 0)
-//		moveMotorTarget(x_axis, 1, 30); //incomplete
-//	return;
-//}
 
 // Calculate the distance (delta) from the current position to the new one
 // and update the current position
@@ -167,8 +151,6 @@ void moveMotorAxis(tMotor axis, float degrees)
 #endif
 	return;
 }
-
-//------------------------------------------------------------------------------------
 
 // We're passed a single command, like "G1" or "X12.456"
 // We need to split it up and pick the value type (X, or Y, etc) and float value out of it.
@@ -326,4 +308,27 @@ long readLine(long fd, char *buffer, long buffLen)
 	// Make sure the buffer is NULL terminated
 	buffer[index] = 0;
 	return index;  // number of characters in the line
+}
+
+void startSeq(){
+	setLEDColor(ledRed);
+
+	displayCenteredTextLine(2, "Made by Xander Soldaat");
+	displayCenteredTextLine(4, "and Cyrus Cuenca");
+	displayCenteredTextLine(6, "Version 1.0");
+	displayCenteredTextLine(8, "http://github.com/cyruscuenca/g-pars3");
+
+	playTone(554, 5);
+	moveMotorTarget(extruderButton, -75, 100);
+}
+
+void endSeq(){
+	setLEDColor(ledGreen);
+	moveMotorTarget(extruderButton, 75, 100);
+	playTone(554, 5);
+	sleep(100);
+	playTone(554, 5);
+	sleep(100);
+	playTone(554, 5);
+	sleep(100);
 }

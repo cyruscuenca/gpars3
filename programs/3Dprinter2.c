@@ -19,7 +19,7 @@ const float noParam = -255;
 
 typedef enum tCmdType
 {
-	G1_NONE,
+	GCMD_NONE,
 	G1_START,
 	G1_X,
 	G1_Y,
@@ -71,7 +71,10 @@ task main(){
 	char buffer[128];
 	long lineLength = 0;
 
+	// This is information that should come from the command in the file itself, not hard
+	// coded like this.
 	string gcmd = "G1";
+
 	fd = fileOpenRead(fileName);
 
 	if (fd < 0) // if file is not found/cannot open
@@ -84,12 +87,10 @@ task main(){
 		lineLength = readLine(fd, buffer, 128);
 		if (lineLength > 0)
 		{
-			// ignore the line if it starts with a ";"
-			if (buffer[0] != ';')
-			{
-				readNextCommand(buffer, lineLength, x, y, z, e, f);
+			// The readNextCommand will only return true if a valid command has been found
+			// Comment handling is now done there.
+			if (readNextCommand(buffer, lineLength, x, y, z, e, f))
 				executeCommand(gcmd, x, y, z, e, f);
-			}
 			// Wipe the buffer by setting its contents to 0
 			memset(buffer, 0, sizeof(buffer));
 		}
@@ -157,18 +158,23 @@ void moveMotorAxis(tMotor axis, float degrees)
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 {
 	cmdVal = noParam;
+	int gcmdType = -1;
 
 	// Anything less than 2 characters is bogus
 	if (buffLen < 2)
-		return G1_NONE;
+		return GCMD_NONE;
 
 	writeDebugStreamLine("processesCommand: buff: %s", buff);
 
 	switch (buff[0])
 	{
 	case 'G':
-		return G1_START;
-
+		sscanf(buff, "G%d", &gcmdType);
+		switch(gcmdType)
+		{
+			case 1: return G1_START;
+			default: return GCMD_NONE;
+		}
 	case 'X':
 		sscanf(buff, "X%f", &cmdVal); return G1_X;
 
@@ -184,7 +190,7 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 	case 'F':
 		sscanf(buff, "F%f", &cmdVal); return G1_F;
 
-	default: return G1_NONE;
+	default: return GCMD_NONE;
 	}
 }
 
@@ -193,7 +199,7 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f)
 {
 	char currCmdBuff[16];
-	tCmdType currCmd = G1_NONE;
+	tCmdType currCmd = GCMD_NONE;
 	int currCmdBuffIndex = 0;
 	float currCmdVal = 0;
 
@@ -203,6 +209,10 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 
 	// Clear the currCmdBuff
 	memset(currCmdBuff, 0, sizeof(currCmdBuff));
+
+	// Ignore if we're starting with a ";"
+	if (cmd[0] == ';')
+		return false;
 
 	for (int i = 0; i < cmdLen; i++)
 	{
@@ -214,7 +224,7 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 			// writeDebugStreamLine("currCmd: %d, currCmdVal: %f", currCmd, currCmdVal);
 			switch (currCmd)
 			{
-			case G1_NONE: break;
+			case GCMD_NONE: writeDebugStreamLine("GCMD_NONE, returning!"); return false;
 			case G1_START: break;
 			case G1_X: x = currCmdVal; break;
 			case G1_Y: y = currCmdVal; break;

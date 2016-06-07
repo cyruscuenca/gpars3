@@ -84,16 +84,20 @@ task main(){
 		lineLength = readLine(fd, buffer, 128);
 		if (lineLength > 0)
 		{
-			readNextCommand(buffer, lineLength, x, y, z, e, f);
-			executeCommand(gcmd, x, y, z, e, f);
+			// ignore the line if it starts with a ";"
+			if (buffer[0] != ';')
+			{
+				readNextCommand(buffer, lineLength, x, y, z, e, f);
+				executeCommand(gcmd, x, y, z, e, f);
+			}
+			// Wipe the buffer by setting its contents to 0
+			memset(buffer, 0, sizeof(buffer));
 		}
 		else
-
-		return;
-
-		// Wipe the buffer by setting its contents to 0
-		memset(buffer, 0, sizeof(buffer));
-
+		{
+			// we're done
+			return;
+		}
 	}
 }
 

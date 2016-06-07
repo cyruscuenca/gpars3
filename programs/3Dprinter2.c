@@ -20,12 +20,12 @@ const float noParam = -255;
 typedef enum tCmdType
 {
 	GCMD_NONE,
-	G1_START,
-	G1_X,
-	G1_Y,
-	G1_Z,
-	G1_E,
-	G1_F,
+	GCMD_G1,
+	GCMD_X,
+	GCMD_Y,
+	GCMD_Z,
+	GCMD_E,
+	GCMD_F,
 } tCmdType;
 
 
@@ -41,8 +41,8 @@ void startSeq();
 void endSeq();
 
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
-bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f);
-void executeCommand(string gcmd, float x, float y, float z, float e, float f);
+bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f);
+void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
 long degBuff = 0;
 
@@ -71,9 +71,7 @@ task main(){
 	char buffer[128];
 	long lineLength = 0;
 
-	// This is information that should come from the command in the file itself, not hard
-	// coded like this.
-	string gcmd = "G1";
+	tCmdType gcmd = GCMD_NONE;
 
 	fd = fileOpenRead(fileName);
 
@@ -82,6 +80,7 @@ task main(){
 		writeDebugStreamLine("Could not open %s", fileName);
 		return;
 	}
+
 	while (true)
 	{
 		lineLength = readLine(fd, buffer, 128);
@@ -89,7 +88,7 @@ task main(){
 		{
 			// The readNextCommand will only return true if a valid command has been found
 			// Comment handling is now done there.
-			if (readNextCommand(buffer, lineLength, x, y, z, e, f))
+			if (readNextCommand(buffer, lineLength, gcmd, x, y, z, e, f))
 				executeCommand(gcmd, x, y, z, e, f);
 			// Wipe the buffer by setting its contents to 0
 			memset(buffer, 0, sizeof(buffer));
@@ -97,6 +96,7 @@ task main(){
 		else
 		{
 			// we're done
+			writeDebugStreamLine("All done!");
 			return;
 		}
 	}
@@ -172,23 +172,23 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 		sscanf(buff, "G%d", &gcmdType);
 		switch(gcmdType)
 		{
-			case 1: return G1_START;
+			case 1: return GCMD_G1;
 			default: return GCMD_NONE;
 		}
 	case 'X':
-		sscanf(buff, "X%f", &cmdVal); return G1_X;
+		sscanf(buff, "X%f", &cmdVal); return GCMD_X;
 
 	case 'Y':
-		sscanf(buff, "Y%f", &cmdVal); return G1_Y;
+		sscanf(buff, "Y%f", &cmdVal); return GCMD_Y;
 
 	case 'Z':
-		sscanf(buff, "Z%f", &cmdVal); return G1_Z;
+		sscanf(buff, "Z%f", &cmdVal); return GCMD_Z;
 
 	case 'E':
-		sscanf(buff, "E%f", &cmdVal); return G1_E;
+		sscanf(buff, "E%f", &cmdVal); return GCMD_E;
 
 	case 'F':
-		sscanf(buff, "F%f", &cmdVal); return G1_F;
+		sscanf(buff, "F%f", &cmdVal); return GCMD_F;
 
 	default: return GCMD_NONE;
 	}
@@ -196,7 +196,7 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 
 
 // Read and parse the next line from file and retrieve the various parameters, if present
-bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float &e, float &f)
+bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f)
 {
 	char currCmdBuff[16];
 	tCmdType currCmd = GCMD_NONE;
@@ -224,14 +224,13 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 			// writeDebugStreamLine("currCmd: %d, currCmdVal: %f", currCmd, currCmdVal);
 			switch (currCmd)
 			{
-			case GCMD_NONE: writeDebugStreamLine("GCMD_NONE, returning!"); return false;
-			case G1_START: break;
-			case G1_X: x = currCmdVal; break;
-			case G1_Y: y = currCmdVal; break;
-			case G1_Z: z = currCmdVal; break;
-			case G1_E: e = currCmdVal; break;
-			case G1_F: f = currCmdVal; break;
-
+				case GCMD_NONE: gcmd = GCMD_NONE; return false;
+				case GCMD_G1: gcmd = GCMD_G1; break;
+				case GCMD_X: x = currCmdVal; break;
+				case GCMD_Y: y = currCmdVal; break;
+				case GCMD_Z: z = currCmdVal; break;
+				case GCMD_E: e = currCmdVal; break;
+				case GCMD_F: f = currCmdVal; break;
 			}
 			// Clear the currCmdBuff
 			memset(currCmdBuff, 0, sizeof(currCmdBuff));
@@ -250,47 +249,45 @@ bool readNextCommand(char *cmd, int cmdLen, float &x, float &y, float &z, float 
 }
 
 // Use parameters gathered from command to move the motors, extrude, that sort of thing
-void executeCommand(string gcmd, float x, float y, float z, float e, float f)
+void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f)
 {
 	float motorDegrees; 	// Amount the motor has to move
 	float deltaPosition;	// The difference between the current position and the one we want to move to
 
 	// execute functions inside this algorithm
-	if (strcmp(gcmd, "G1") == 0 ){
+	switch (gcmd)
+	{
+		case GCMD_G1:
+		{
+			if(x != noParam){
+				writeDebugStreamLine("\n----------    X AXIS   -------------");
+				deltaPosition = calcDeltaDistance(xAxisPosition, x);
+				motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
+				moveMotorAxis(x_axis, motorDegrees);
+			}
 
-		if(x != noParam){
-			writeDebugStreamLine("\n----------    X AXIS   -------------");
-			deltaPosition = calcDeltaDistance(xAxisPosition, x);
-			motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
-			moveMotorAxis(x_axis, motorDegrees);
+			if(y != noParam){
+				writeDebugStreamLine("\n----------    Y AXIS   -------------");
+				deltaPosition = calcDeltaDistance(yAxisPosition, y);
+				motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
+				moveMotorAxis(y_axis, motorDegrees);
+			}
+
+			if(z != noParam){
+				writeDebugStreamLine("\n----------    Z AXIS   -------------");
+				deltaPosition = calcDeltaDistance(zAxisPosition, z);
+				motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
+				moveMotorAxis(z_axis, motorDegrees);
+			}
 		}
+		break;
+		default:
+			displayCenteredBigTextLine(1 , "error! :: gcmd value is unknown!");
 
-		if(y != noParam){
-			writeDebugStreamLine("\n----------    Y AXIS   -------------");
-			deltaPosition = calcDeltaDistance(yAxisPosition, y);
-			motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
-			moveMotorAxis(y_axis, motorDegrees);
-		}
-
-		if(z != noParam){
-			writeDebugStreamLine("\n----------    Z AXIS   -------------");
-			deltaPosition = calcDeltaDistance(zAxisPosition, z);
-			motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
-			moveMotorAxis(z_axis, motorDegrees);
-		}
-
+	}
 #ifndef DISABLE_MOTORS
 		waitForMotors();
 #endif
-
-	}
-
-	//this is where to add else if statements for new g commands
-	else
-	{
-		//error
-		displayCenteredBigTextLine(1 , "error! :: gcmd value is unknown!");
-	}
 }
 
 // Read the file, one line at a time

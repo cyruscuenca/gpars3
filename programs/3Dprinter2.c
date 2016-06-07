@@ -21,6 +21,7 @@ typedef enum tCmdType
 {
 	GCMD_NONE,
 	GCMD_G1,
+	GCMD_G92,
 	GCMD_X,
 	GCMD_Y,
 	GCMD_Z,
@@ -44,6 +45,8 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
+void handleCommand_G1(float x, float y, float z, float e, float f);
+void handleCommand_G92(float x, float y, float z, float e, float f);
 long degBuff = 0;
 
 //this is where you specify your starting position
@@ -173,6 +176,7 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 		switch(gcmdType)
 		{
 			case 1: return GCMD_G1;
+			case 92: return GCMD_G92;
 			default: return GCMD_NONE;
 		}
 	case 'X':
@@ -226,6 +230,7 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 			{
 				case GCMD_NONE: gcmd = GCMD_NONE; return false;
 				case GCMD_G1: gcmd = GCMD_G1; break;
+				case GCMD_G92: gcmd = GCMD_G92; break;
 				case GCMD_X: x = currCmdVal; break;
 				case GCMD_Y: y = currCmdVal; break;
 				case GCMD_Z: z = currCmdVal; break;
@@ -251,43 +256,20 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 // Use parameters gathered from command to move the motors, extrude, that sort of thing
 void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f)
 {
-	float motorDegrees; 	// Amount the motor has to move
-	float deltaPosition;	// The difference between the current position and the one we want to move to
-
 	// execute functions inside this algorithm
 	switch (gcmd)
 	{
 		case GCMD_G1:
-		{
-			if(x != noParam){
-				writeDebugStreamLine("\n----------    X AXIS   -------------");
-				deltaPosition = calcDeltaDistance(xAxisPosition, x);
-				motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
-				moveMotorAxis(x_axis, motorDegrees);
-			}
-
-			if(y != noParam){
-				writeDebugStreamLine("\n----------    Y AXIS   -------------");
-				deltaPosition = calcDeltaDistance(yAxisPosition, y);
-				motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
-				moveMotorAxis(y_axis, motorDegrees);
-			}
-
-			if(z != noParam){
-				writeDebugStreamLine("\n----------    Z AXIS   -------------");
-				deltaPosition = calcDeltaDistance(zAxisPosition, z);
-				motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
-				moveMotorAxis(z_axis, motorDegrees);
-			}
-		}
-		break;
+			handleCommand_G1(x, y, z, e, f);
+			break;
+		case GCMD_G92:
+			handleCommand_G92(x, y, z, e, f);
+			break;
 		default:
 			displayCenteredBigTextLine(1 , "error! :: gcmd value is unknown!");
-
+			break;
 	}
-#ifndef DISABLE_MOTORS
-		waitForMotors();
-#endif
+
 }
 
 // Read the file, one line at a time
@@ -315,6 +297,61 @@ long readLine(long fd, char *buffer, long buffLen)
 	buffer[index] = 0;
 	return index;  // number of characters in the line
 }
+
+void handleCommand_G1(float x, float y, float z, float e, float f)
+{
+	writeDebugStreamLine("Handling G1 command");
+	float motorDegrees; 	// Amount the motor has to move
+	float deltaPosition;	// The difference between the current position and the one we want to move to
+
+	if(x != noParam){
+		writeDebugStreamLine("\n----------    X AXIS   -------------");
+		deltaPosition = calcDeltaDistance(xAxisPosition, x);
+		motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
+		moveMotorAxis(x_axis, motorDegrees);
+	}
+
+	if(y != noParam){
+		writeDebugStreamLine("\n----------    Y AXIS   -------------");
+		deltaPosition = calcDeltaDistance(yAxisPosition, y);
+		motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
+		moveMotorAxis(y_axis, motorDegrees);
+	}
+
+	if(z != noParam){
+		writeDebugStreamLine("\n----------    Z AXIS   -------------");
+		deltaPosition = calcDeltaDistance(zAxisPosition, z);
+		motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
+		moveMotorAxis(z_axis, motorDegrees);
+	}
+#ifndef DISABLE_MOTORS
+	waitForMotors();
+#endif
+}
+
+void handleCommand_G92(float x, float y, float z, float e, float f)
+{
+	writeDebugStreamLine("Handling G92 command");
+	if(x != noParam){
+		writeDebugStreamLine("\n----------    X AXIS   -------------");
+		// Do something
+	}
+
+	if(y != noParam){
+		writeDebugStreamLine("\n----------    Y AXIS   -------------");
+		// Do something
+	}
+
+	if(z != noParam){
+		writeDebugStreamLine("\n----------    Z AXIS   -------------");
+		// Do something
+	}
+#ifndef DISABLE_MOTORS
+	waitForMotors();
+#endif
+}
+
+
 
 void startSeq(){
 	setLEDColor(ledRed);

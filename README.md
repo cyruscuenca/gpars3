@@ -10,8 +10,6 @@ actuators driven by LEGO motors with build in encodors which allows me to track 
 print head.
 
 
-
-
 This is extuder is a 3D printing pen I bought off Amazon.com:
 
 http://www.amazon.com/Soyan-Drawing-Printing-Printer-Filament/dp/B00PTW7WEQ
@@ -61,13 +59,16 @@ __Then, with no spaces, and in lowercase,__
  
 I build the the hardware, work on the parser, make the videos, and the document the LEGO printer.
 
+
 __Xander Soldaat:__ http://botbench.com
 
 Is a HUGE help with the programming :grinning:
 
+
 __Marc-Andre-Bazergui:__ http://bazmarc.ca
 
 Built the first LEGO 3D printer using a 3D pen. His used a math program to make shapes.
+
 
 __Thomas Madeya:__ nano-giants.net
 Made the math program for Marc.

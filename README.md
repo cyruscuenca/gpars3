@@ -41,26 +41,26 @@ __Then, with no spaces, and in lowercase,__
 
 The words I'll reference are:
 
-|-|-------------|
-|:|startposition|
-|:|degreestomm  |
-|:|startseq     |
-|:|endseq       |
-|:|power        |
+|---|:-----------:|
+|:  |startposition|
+|:  |degreestomm  |
+|:  |startseq     |
+|:  |endseq       |
+|:  |power        |
 
 
 ## Credits
 
-    __Cyrus Cuenca:__ http://cyruscuenca.blogspot.com
+ __Cyrus Cuenca:__ http://cyruscuenca.blogspot.com
 I build the the hardware, work on the parser, make the videos, and the document the LEGO printer.
 
-    __Xander Soldaat:__ http://botbench.com
+__Xander Soldaat:__ http://botbench.com
 Is a HUGE help with the programming :grinning:
 
-    __Marc-Andre-Bazergui:__ http://bazmarc.ca
+__Marc-Andre-Bazergui:__ http://bazmarc.ca
 Built the first LEGO 3D printer using a 3D pen. His used a math program to make shapes.
 
-    __Thomas Madeya:__ nano-giants.net
+__Thomas Madeya:__ nano-giants.net
 Made the math program for Marc.
 ---
 ## License

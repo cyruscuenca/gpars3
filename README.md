@@ -16,10 +16,10 @@ http://www.amazon.com/Soyan-Drawing-Printing-Printer-Filament/dp/B00PTW7WEQ
 
 These pens are sold my a variaty of sellers, and they sometimes get misslabeled. Sometimes they'll say 
 the pen can use PLA and ABS(types of plastic). __DO NOT USE PLA!__ I kept using PLA with my pens, and 
-broke a whole bunch. I wasted a lot of money buying pens, so take my word and use ABS.
+broke a whole bunch :neutral_face: I wasted a lot of money buying pens, so take my word and use ABS.
 
 
-__Here are a few videos I have on my YouTube channel:__
+Here are a few videos I have on my YouTube channel:
 
 https://www.youtube.com/watch?v=36_p1c6M734
 
@@ -55,12 +55,15 @@ __Then, with no spaces, and in lowercase,__
 ## Credits
 
  __Cyrus Cuenca:__ http://cyruscuenca.blogspot.com
+ 
 I build the the hardware, work on the parser, make the videos, and the document the LEGO printer.
 
 __Xander Soldaat:__ http://botbench.com
+
 Is a HUGE help with the programming :grinning:
 
 __Marc-Andre-Bazergui:__ http://bazmarc.ca
+
 Built the first LEGO 3D printer using a 3D pen. His used a math program to make shapes.
 
 __Thomas Madeya:__ nano-giants.net

@@ -79,7 +79,7 @@ Made the math program for Marc.
 
 Creative Commons Attribution-NonCommercial 4.0 International Public License
 
-Read LICENSE.md for more info(It's really long :unamused:).
+Read LICENSE.md for more info. It's really long :unamused:
 
 ## Contact
 

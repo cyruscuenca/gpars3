@@ -39,20 +39,20 @@ comments.
 __To find something referanced in my video tuturials:__
 
 1. Press CTRL + F 
-2. Type ":"
+2. Type "__:__"
 
-__Then, with no spaces, and in lowercase,__
+Then, with no spaces, and in lowercase,
 
 3. Type the keyword I say
 4. Click enter
 
 | |   Reference words |
 |---|--------------|
-|:  |startposition |
-|:  |degreestomm   |
-|:  |startseq      |
-|:  |endseq        |
-|:  |power         |
+|__:__  |startposition |
+|__:__  |degreestomm   |
+|__:__  |startseq      |
+|__:__  |endseq        |
+|__:__  |power         |
 
 
 ## Credits

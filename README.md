@@ -5,17 +5,21 @@
 
 ## Description
 
-This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. My printer uses LEGO linear actuators driven by LEGO motors with build in encodors which allows me to track the position of the print head.
+This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. My printer uses LEGO linear 
+actuators driven by LEGO motors with build in encodors which allows me to track the position of the 
+print head.
 
 The extuder is a 3D printing pen I bought off Amazon.com 
 
 http://www.amazon.com/Soyan-Drawing-Printing-Printer-Filament/dp/B00PTW7WEQ
 
-These pens are sold my a variaty of sellers, and they sometimes get misslabeled. Sometimes they'll say the pen can use PLA and ABS(types of plastic). 
+These pens are sold my a variaty of sellers, and they sometimes get misslabeled. Sometimes they'll say 
+the pen can use PLA and ABS(types of plastic). 
 
-###DO NOT USE PLA!
+####DO NOT USE PLA!
 
-I kept using PLA with my pens, and broke a whole bunch. I wasted a lot of money, so take my word and use ABS.
+I kept using PLA with my pens, and broke a whole bunch. I wasted a lot of money, so take my word and
+use ABS.
 
 __Here are a few videos I have on my YouTube channel:__
 
@@ -29,7 +33,8 @@ In the future, I'll post a coule tuturials to make it easier to make a LEGO 3D p
 
 All of the config variables are located between line 45 and 70.
 
-I have a sytem of finding variables(for people not familiar with text based code) that utilizes comments.
+I have a sytem of finding variables(for people not familiar with text based code) that utilizes
+comments.
 
 __To find something referanced in my video tuturials:__
 1. Press CTRL + F 

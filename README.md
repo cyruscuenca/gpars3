@@ -39,7 +39,7 @@ __Then, with no spaces, and in lowercase,__
 3. Type the keyword I say
 4. Click enter
 
-| Reference words |
+| |   Reference words |
 |---|--------------|
 |:  |startposition |
 |:  |degreestomm   |
@@ -61,6 +61,7 @@ Built the first LEGO 3D printer using a 3D pen. His used a math program to make 
 
 __Thomas Madeya:__ nano-giants.net
 Made the math program for Marc.
+
 ---
 ## License
 

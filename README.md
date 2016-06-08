@@ -4,7 +4,7 @@
 
 
 ## Description
-
+---
 This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. My printer uses LEGO linear 
 actuators driven by LEGO motors with build in encodors which allows me to track the position of the 
 print head.
@@ -28,8 +28,8 @@ https://www.youtube.com/watch?v=ibm2scWGx3Q
 
 In the future, I'll post a coule tuturials to make it easier to make a LEGO 3D printer.
 
----
 ## Configuration
+---
 
 All of the config variables are located between line 45 and 70.
 
@@ -54,8 +54,8 @@ Then, with no spaces, and in lowercase,
 |__:__  |endseq        |
 |__:__  |power         |
 
-
 ## Credits
+---
 
  __Cyrus Cuenca:__ http://cyruscuenca.blogspot.com
  
@@ -76,13 +76,14 @@ __Thomas Madeya:__ nano-giants.net
 
 Made the math program for Marc.
 
----
 ## License
+---
 
 Creative Commons Attribution-NonCommercial 4.0 International Public License
 
 Read LICENSE.md for more info(It's really long :unamused:).
 
 ## Contact
+---
 
 Email Cyrus at: cyrushcuenca@gmail.com for questions.

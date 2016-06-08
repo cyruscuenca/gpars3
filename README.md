@@ -39,14 +39,13 @@ __Then, with no spaces, and in lowercase,__
 3. Type the keyword I say
 4. Click enter
 
-The words I'll reference are:
-
-|---|:-----------:|
-|:  |startposition|
-|:  |degreestomm  |
-|:  |startseq     |
-|:  |endseq       |
-|:  |power        |
+| Reference words |
+|---|--------------|
+|:  |startposition |
+|:  |degreestomm   |
+|:  |startseq      |
+|:  |endseq        |
+|:  |power         |
 
 
 ## Credits

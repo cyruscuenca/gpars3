@@ -37,10 +37,12 @@ I have a sytem of finding variables(for people not familiar with text based code
 comments.
 
 __To find something referanced in my video tuturials:__
+
 1. Press CTRL + F 
 2. Type ":"
 
 __Then, with no spaces, and in lowercase,__
+
 3. Type the keyword I say
 4. Click enter
 
@@ -71,6 +73,7 @@ Built the first LEGO 3D printer using a 3D pen. His used a math program to make 
 
 
 __Thomas Madeya:__ nano-giants.net
+
 Made the math program for Marc.
 
 ---

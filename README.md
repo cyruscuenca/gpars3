@@ -15,8 +15,8 @@ http://www.amazon.com/Soyan-Drawing-Printing-Printer-Filament/dp/B00PTW7WEQ
 
 
 These pens are sold my a variaty of sellers, and they sometimes get misslabeled. Sometimes they'll say 
-the pen can use PLA and ABS(types of plastic). ##### DO NOT USE PLA! I kept using PLA with my pens, and 
-broke a whole bunch. I wasted a lot of money, so take my word and use ABS.
+the pen can use PLA and ABS(types of plastic). __DO NOT USE PLA!__ I kept using PLA with my pens, and 
+broke a whole bunch. I wasted a lot of money buying pens, so take my word and use ABS.
 
 
 __Here are a few videos I have on my YouTube channel:__

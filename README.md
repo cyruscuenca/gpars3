@@ -9,14 +9,17 @@ This is a g-code parser written in ROBOTC for a LEGO 3D printer I'm making. My p
 actuators driven by LEGO motors with build in encodors which allows me to track the position of the 
 print head.
 
+
+
+
 This is extuder is a 3D printing pen I bought off Amazon.com:
 
 http://www.amazon.com/Soyan-Drawing-Printing-Printer-Filament/dp/B00PTW7WEQ
 
-
 These pens are sold my a variaty of sellers, and they sometimes get misslabeled. Sometimes they'll say 
 the pen can use PLA and ABS(types of plastic). __DO NOT USE PLA!__ I kept using PLA with my pens, and 
 broke a whole bunch :neutral_face: I wasted a lot of money buying pens, so take my word and use ABS.
+
 
 
 Here are a few videos I have on my YouTube channel:

@@ -15,7 +15,10 @@ This is extuder is a 3D printing pen I bought off Amazon.com:
 http://www.amazon.com/Soyan-Drawing-Printing-Printer-Filament/dp/B00PTW7WEQ
 
 These pens are sold my a variaty of sellers, and they sometimes get misslabeled. Sometimes they'll say 
-the pen can use PLA and ABS(types of plastic). __DO NOT USE PLA!__ I kept using PLA with my pens, and 
+the pen can use PLA and ABS(types of plastic). 
+
+
+__DO NOT USE PLA!__ I kept using PLA with my pens, and 
 broke a whole bunch :neutral_face: I wasted a lot of money buying pens, so take my word and use ABS.
 
 
@@ -28,8 +31,8 @@ https://www.youtube.com/watch?v=ibm2scWGx3Q
 
 In the future, I'll post a coule tuturials to make it easier to make a LEGO 3D printer.
 
----
 ## Configuration
+
 
 All of the config variables are located between line 45 and 70.
 
@@ -37,21 +40,22 @@ I have a sytem of finding variables(for people not familiar with text based code
 comments.
 
 __To find something referanced in my video tuturials:__
-1. Press CTRL + F 
-2. Type ":"
 
-__Then, with no spaces, and in lowercase,__
+1. Press CTRL + F 
+2. Type "__:__"
+
+Then, with no spaces, and in lowercase,
+
 3. Type the keyword I say
 4. Click enter
 
 | |   Reference words |
 |---|--------------|
-|:  |startposition |
-|:  |degreestomm   |
-|:  |startseq      |
-|:  |endseq        |
-|:  |power         |
-
+|__:__  |startposition |
+|__:__  |degreestomm   |
+|__:__  |startseq      |
+|__:__  |endseq        |
+|__:__  |power         |
 
 ## Credits
 
@@ -71,14 +75,14 @@ Built the first LEGO 3D printer using a 3D pen. His used a math program to make 
 
 
 __Thomas Madeya:__ nano-giants.net
+
 Made the math program for Marc.
 
----
 ## License
 
 Creative Commons Attribution-NonCommercial 4.0 International Public License
 
-Read LICENSE.md for more info(It's really long :unamused:).
+Read LICENSE.md for more info. It's really long :unamused:
 
 ## Contact
 

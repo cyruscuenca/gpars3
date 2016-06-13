@@ -17,6 +17,8 @@ const char *fileName = "gcode.txt";
 // You need some kind of value here that will never be used in your g-code
 const float noParam = -255;
 
+const long EOF = -255;
+
 typedef enum tCmdType
 {
 	GCMD_NONE,
@@ -87,13 +89,17 @@ task main(){
 	while (true)
 	{
 		lineLength = readLine(fd, buffer, 128);
-		if (lineLength > 0)
+		if (lineLength != EOF)
 		{
-			// The readNextCommand will only return true if a valid command has been found
-			// Comment handling is now done there.
-			if (readNextCommand(buffer, lineLength, gcmd, x, y, z, e, f))
-				executeCommand(gcmd, x, y, z, e, f);
-			// Wipe the buffer by setting its contents to 0
+			// We can ignore empty lines
+			if (lineLength > 0)
+			{
+				// The readNextCommand will only return true if a valid command has been found
+				// Comment handling is now done there.
+				if (readNextCommand(buffer, lineLength, gcmd, x, y, z, e, f))
+					executeCommand(gcmd, x, y, z, e, f);
+				// Wipe the buffer by setting its contents to 0
+			}
 			memset(buffer, 0, sizeof(buffer));
 		}
 		else
@@ -166,8 +172,6 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 	// Anything less than 2 characters is bogus
 	if (buffLen < 2)
 		return GCMD_NONE;
-
-	writeDebugStreamLine("processesCommand: buff: %s", buff);
 
 	switch (buff[0])
 	{
@@ -295,7 +299,10 @@ long readLine(long fd, char *buffer, long buffLen)
 	}
 	// Make sure the buffer is NULL terminated
 	buffer[index] = 0;
-	return index;  // number of characters in the line
+	if (index == 0)
+		return EOF;
+	else
+		return index;  // number of characters in the line
 }
 
 void handleCommand_G1(float x, float y, float z, float e, float f)
@@ -334,17 +341,17 @@ void handleCommand_G92(float x, float y, float z, float e, float f)
 	writeDebugStreamLine("Handling G92 command");
 	if(x != noParam){
 		writeDebugStreamLine("\n----------    X AXIS   -------------");
-		// Do something
+		xAxisPosition = x;
 	}
 
 	if(y != noParam){
 		writeDebugStreamLine("\n----------    Y AXIS   -------------");
-		// Do something
+		yAxisPosition = y;
 	}
 
 	if(z != noParam){
 		writeDebugStreamLine("\n----------    Z AXIS   -------------");
-		// Do something
+		zAxisPosition = z;
 	}
 #ifndef DISABLE_MOTORS
 	waitForMotors();

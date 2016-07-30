@@ -14,6 +14,7 @@
 //:filename
 const char *fileName = "gcode.txt";
 
+
 // You need some kind of value here that will never be used in your g-code
 const float noParam = -255;
 
@@ -31,45 +32,86 @@ typedef enum tCmdType
 	GCMD_F,
 } tCmdType;
 
-
 #ifndef DISABLE_MOTORS
 void waitForMotors();
 #endif
 
 float calcDeltaDistance(float &currentPosition, float newPosition);
-float calcMotorDegrees(float travelDistance, long degToMM);
-void moveMotorAxis(tMotor axis, float degrees);
-
+float calcMotorDegrees(float deltaPosition, long degToMM);
+void moveMotorAxis(tMotor axis, float degrees, long motorPower);
 void startSeq();
 void endSeq();
-
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
 void handleCommand_G1(float x, float y, float z, float e, float f);
 void handleCommand_G92(float x, float y, float z, float e, float f);
-long degBuff = 0;
+long degBuff;
 
 //this is where you specify your starting position
 //:startposition
-float xAxisPosition = 0;
+float xAxisPosition, yAxisPosition, zAxisPosition = 0;
 
-float yAxisPosition = 0;
-
-float zAxisPosition = 0;
-
-//this is where you specify the degrees to MM so the program can compensate properly
+//this is where you specify the degrees to mm so the program can compensate properly
 //:degreestomm
-long XdegreesToMM = 8;
+long xDegreesToMM = 8;
+long yDegreesToMM = 8;
+long zDegreesToMM = 8;
 
-long YdegreesToMM = 8;
+//this is where you can set the median speed of the motors
+//:setspeed
+long setPower = 9;
 
-long ZdegreesToMM = 8;
+long xPower, yPower = setPower;
 
 task main(){
 	clearDebugStream();
+	setLEDColor(ledRed);
+
+	long isStartPressed = 0;
+	long slideNum = 1; //slideNum holds what number slide is being displayed
+	drawBmpfile(0, 127, "slide1");
+	sleep(2000);
+	while(isStartPressed == 0){
+		waitForButtonPress();
+		long isLeftPressed = getButtonPress(LEFT_BUTTON);
+		long isRightPressed = getButtonPress(RIGHT_BUTTON);
+		long isEnterPressed = getButtonPress(ENTER_BUTTON);
+
+		if(isLeftPressed == 1){
+			playTone(554, 5);
+			slideNum = slideNum - 1;
+		}
+		if(isRightPressed == 1){
+			playTone(554, 5);
+			slideNum = slideNum + 1;
+		}
+		if(slideNum == 1 && isEnterPressed == 1){
+			playTone(554, 5);
+			isStartPressed = 1;
+			sleep(200);
+		}
+		if(slideNum == 0){
+			slideNum = 3;
+		}
+		if(slideNum == 4){
+			slideNum = 1;
+		}
+		if(slideNum == 1){
+			drawBmpfile(0, 127, "slide1");
+		}
+		if(slideNum == 2){
+			drawBmpfile(0, 127, "slide2");
+		}
+		if(slideNum == 3){
+			drawBmpfile(0, 127, "slide3");
+		}
+		sleep(250);
+	}
+
 	startSeq();
+	setLEDColor(ledOff);
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -106,6 +148,7 @@ task main(){
 		{
 			// we're done
 			writeDebugStreamLine("All done!");
+			endSeq();
 			return;
 		}
 	}
@@ -123,7 +166,7 @@ void waitForMotors(){
 // and update the current position
 float calcDeltaDistance(float &currentPosition, float newPosition){
 
-	writeDebugStreamLine("calcDeltaDistance(%f, %f)", currentPosition, newPosition);
+	writeDebugStreamLine("calcDeltaDistance(Current position: %f, New position: %f)", currentPosition, newPosition);
 
 	float deltaPosition = newPosition - currentPosition;
 	writeDebugStreamLine("deltaPosition: %f", deltaPosition);
@@ -133,31 +176,30 @@ float calcDeltaDistance(float &currentPosition, float newPosition){
 }
 
 // Calculate the degrees the motor has to turn, using provided gear size
-float calcMotorDegrees(float travelDistance, long degToMM)
+float calcMotorDegrees(float deltaPosition, long degToMM)
 {
-	writeDebugStreamLine("calcMotorDegrees(%f, %f)", travelDistance, degToMM);
-	return travelDistance * degToMM;
+	writeDebugStreamLine("calcMotorDegrees(%f, %f)", deltaPosition, degToMM);
+	return deltaPosition * degToMM;
 }
 
 // Wrapper to move the motor, provides additional debugging feedback
-void moveMotorAxis(tMotor axis, float degrees)
+void moveMotorAxis(tMotor axis, float degrees, long motorPower)
 {
-	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f", axis, degrees);
+	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f, power: %d", axis, degrees, motorPower);
 #ifndef DISABLE_MOTORS
-	long motorSpeed = 9;
 	long roundedDegrees = round(degrees);
 	degBuff = degrees - roundedDegrees + degBuff;
 	if (roundedDegrees < 0)
 	{
 		roundedDegrees = abs(roundedDegrees);
-		motorSpeed = -9;
+		motorPower *= -1;
 	}
 	if (degBuff > 1 || degBuff < -1){
 		int degBuffRounded = round(degBuff);
 		roundedDegrees = roundedDegrees + degBuffRounded;
 		degBuff = degBuff - degBuffRounded;
 	}
-	moveMotorTarget(axis, roundedDegrees, motorSpeed);
+	moveMotorTarget(axis, roundedDegrees, motorPower);
 #endif
 	return;
 }
@@ -179,9 +221,9 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 		sscanf(buff, "G%d", &gcmdType);
 		switch(gcmdType)
 		{
-			case 1: return GCMD_G1;
-			case 92: return GCMD_G92;
-			default: return GCMD_NONE;
+		case 1: return GCMD_G1;
+		case 92: return GCMD_G92;
+		default: return GCMD_NONE;
 		}
 	case 'X':
 		sscanf(buff, "X%f", &cmdVal); return GCMD_X;
@@ -232,14 +274,14 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 			// writeDebugStreamLine("currCmd: %d, currCmdVal: %f", currCmd, currCmdVal);
 			switch (currCmd)
 			{
-				case GCMD_NONE: gcmd = GCMD_NONE; return false;
-				case GCMD_G1: gcmd = GCMD_G1; break;
-				case GCMD_G92: gcmd = GCMD_G92; break;
-				case GCMD_X: x = currCmdVal; break;
-				case GCMD_Y: y = currCmdVal; break;
-				case GCMD_Z: z = currCmdVal; break;
-				case GCMD_E: e = currCmdVal; break;
-				case GCMD_F: f = currCmdVal; break;
+			case GCMD_NONE: gcmd = GCMD_NONE; return false;
+			case GCMD_G1: gcmd = GCMD_G1; break;
+			case GCMD_G92: gcmd = GCMD_G92; break;
+			case GCMD_X: x = currCmdVal; break;
+			case GCMD_Y: y = currCmdVal; break;
+			case GCMD_Z: z = currCmdVal; break;
+			case GCMD_E: e = currCmdVal; break;
+			case GCMD_F: f = currCmdVal; break;
 			}
 			// Clear the currCmdBuff
 			memset(currCmdBuff, 0, sizeof(currCmdBuff));
@@ -263,15 +305,15 @@ void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f)
 	// execute functions inside this algorithm
 	switch (gcmd)
 	{
-		case GCMD_G1:
-			handleCommand_G1(x, y, z, e, f);
-			break;
-		case GCMD_G92:
-			handleCommand_G92(x, y, z, e, f);
-			break;
-		default:
-			displayCenteredBigTextLine(1 , "error! :: gcmd value is unknown!");
-			break;
+	case GCMD_G1:
+		handleCommand_G1(x, y, z, e, f);
+		break;
+	case GCMD_G92:
+		handleCommand_G92(x, y, z, e, f);
+		break;
+	default:
+		displayCenteredBigTextLine(1 , "error! Gcmd value is unknown!");
+		break;
 	}
 
 }
@@ -311,33 +353,47 @@ void handleCommand_G1(float x, float y, float z, float e, float f)
 	float motorDegrees; 	// Amount the motor has to move
 	float deltaPosition;	// The difference between the current position and the one we want to move to
 
-	if(x != noParam){
-		writeDebugStreamLine("\n----------    X AXIS   -------------");
+	if((x != noParam) && (y != noParam)){
+
+		//the power calculation is so both motors stop moving
+		//at the same time
 		deltaPosition = calcDeltaDistance(xAxisPosition, x);
-		motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
-		moveMotorAxis(x_axis, motorDegrees);
+		float xDegrees = calcMotorDegrees(deltaPosition, xDegreesToMM);
+		deltaPosition = calcDeltaDistance(yAxisPosition, y);
+		float yDegrees = calcMotorDegrees(deltaPosition, yDegreesToMM);
+		//math
+		//y-power = y-dist/x-dist *,x-power
+		moveMotorAxis(x_axis, xDegrees, xPower);
+		moveMotorAxis(y_axis, yDegrees, yPower);
 	}
 
-	if(y != noParam){
+	if((x != noParam) && (y == noParam)){
+		writeDebugStreamLine("\n----------    X AXIS   -------------");
+		deltaPosition = calcDeltaDistance(xAxisPosition, x);
+		motorDegrees = calcMotorDegrees(deltaPosition, xDegreesToMM);
+		moveMotorAxis(x_axis, motorDegrees, setPower);
+	}
+
+	if((y != noParam) && (x == noParam)){
 		writeDebugStreamLine("\n----------    Y AXIS   -------------");
 		deltaPosition = calcDeltaDistance(yAxisPosition, y);
-		motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
-		moveMotorAxis(y_axis, motorDegrees);
+		motorDegrees = calcMotorDegrees(deltaPosition, yDegreesToMM);
+		moveMotorAxis(y_axis, motorDegrees, setPower);
 	}
 
 	if(z != noParam){
 		writeDebugStreamLine("\n----------    Z AXIS   -------------");
 		deltaPosition = calcDeltaDistance(zAxisPosition, z);
-		motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
-		moveMotorAxis(z_axis, motorDegrees);
+		motorDegrees = calcMotorDegrees(deltaPosition, zDegreesToMM);
+		moveMotorAxis(z_axis, motorDegrees, setPower);
 	}
+
 #ifndef DISABLE_MOTORS
 	waitForMotors();
 #endif
 }
 
-void handleCommand_G92(float x, float y, float z, float e, float f)
-{
+void handleCommand_G92(float x, float y, float z, float e, float f){
 	writeDebugStreamLine("Handling G92 command");
 	if(x != noParam){
 		writeDebugStreamLine("\n----------    X AXIS   -------------");
@@ -353,38 +409,32 @@ void handleCommand_G92(float x, float y, float z, float e, float f)
 		writeDebugStreamLine("\n----------    Z AXIS   -------------");
 		zAxisPosition = z;
 	}
-#ifndef DISABLE_MOTORS
-	waitForMotors();
-#endif
 }
-
-
 
 void startSeq(){
 	setLEDColor(ledRed);
 
-	displayCenteredTextLine(2, "Made by Xander Soldaat");
-	displayCenteredTextLine(4, "and Cyrus Cuenca");
-	displayCenteredTextLine(6, "Version 1.0");
-	displayCenteredTextLine(8, "http://github.com/cyruscuenca/g-pars3");
-
 	playTone(554, 5);
-	sleep(100);
+	sleep(1000);
 	playTone(554, 5);
-	sleep(100);
+	sleep(1000);
 	playTone(554, 5);
-	sleep(100);
-
+	sleep(1000);
+#ifndef DISABLE_MOTORS
 	moveMotorTarget(extruderButton, 75, -100);
+#endif
 }
 
 void endSeq(){
 	setLEDColor(ledGreen);
+
+#ifndef DISABLE_MOTORS
 	moveMotorTarget(extruderButton, 75, 100);
+#endif
 	playTone(554, 5);
-	sleep(1000);
+	sleep(10000);
 	playTone(554, 5);
-	sleep(1000);
+	sleep(10000);
 	playTone(554, 5);
-	sleep(1000);
+	sleep(10000);
 }

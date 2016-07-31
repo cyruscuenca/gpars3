@@ -20,8 +20,7 @@ const float noParam = -255;
 
 const long EOF = -255;
 
-typedef enum tCmdType
-{
+typedef enum tCmdType{
 	GCMD_NONE,
 	GCMD_G1,
 	GCMD_G92,
@@ -38,9 +37,9 @@ void waitForMotors();
 
 float calcDeltaDistance(float &currentPosition, float newPosition);
 float calcMotorDegrees(float deltaPosition, long degToMM);
-void moveMotorAxis(tMotor axis, float degrees, long motorPower);
-void startSeq();
-void endSeq();
+void moveAxis(tMotor axis, float degrees, long motorPower);
+void seqStart();
+void seqEnd();
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f);
@@ -55,8 +54,8 @@ float xAxisPosition, yAxisPosition, zAxisPosition = 0;
 
 //this is where you specify the degrees to mm so the program can compensate properly
 //:degreestomm
-long xDegreesToMM = 8;
-long yDegreesToMM = 8;
+long xDegreesToMM = 6;
+long yDegreesToMM = 6;
 long zDegreesToMM = 8;
 
 //this is where you can set the median speed of the motors
@@ -110,7 +109,7 @@ task main(){
 		sleep(250);
 	}
 
-	startSeq();
+	seqStart();
 	setLEDColor(ledOff);
 
 	float x, y, z, e, f = 0.0;
@@ -122,33 +121,27 @@ task main(){
 
 	fd = fileOpenRead(fileName);
 
-	if (fd < 0) // if file is not found/cannot open
-	{
+	if (fd < 0){ // if file is not found/cannot open
 		writeDebugStreamLine("Could not open %s", fileName);
 		return;
 	}
 
-	while (true)
-	{
+	while (true){
 		lineLength = readLine(fd, buffer, 128);
-		if (lineLength != EOF)
-		{
+		if (lineLength != EOF){
 			// We can ignore empty lines
-			if (lineLength > 0)
-			{
+			if (lineLength > 0){
 				// The readNextCommand will only return true if a valid command has been found
 				// Comment handling is now done there.
 				if (readNextCommand(buffer, lineLength, gcmd, x, y, z, e, f))
-					executeCommand(gcmd, x, y, z, e, f);
+				executeCommand(gcmd, x, y, z, e, f);
 				// Wipe the buffer by setting its contents to 0
 			}
 			memset(buffer, 0, sizeof(buffer));
 		}
-		else
-		{
-			// we're done
+		else{
 			writeDebugStreamLine("All done!");
-			endSeq();
+			seqEnd();
 			return;
 		}
 	}
@@ -183,14 +176,12 @@ float calcMotorDegrees(float deltaPosition, long degToMM)
 }
 
 // Wrapper to move the motor, provides additional debugging feedback
-void moveMotorAxis(tMotor axis, float degrees, long motorPower)
-{
-	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f, power: %d", axis, degrees, motorPower);
+void moveAxis(tMotor axis, float degrees, long motorPower){
+	writeDebugStreamLine("moveAxis: motor: %d, rawDegrees: %f, power: %d", axis, degrees, motorPower);
 #ifndef DISABLE_MOTORS
 	long roundedDegrees = round(degrees);
 	degBuff = degrees - roundedDegrees + degBuff;
-	if (roundedDegrees < 0)
-	{
+	if (roundedDegrees < 0){
 		roundedDegrees = abs(roundedDegrees);
 		motorPower *= -1;
 	}
@@ -205,9 +196,9 @@ void moveMotorAxis(tMotor axis, float degrees, long motorPower)
 }
 
 // We're passed a single command, like "G1" or "X12.456"
-// We need to split it up and pick the value type (X, or Y, etc) and float value out of it.
-tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
-{
+// We need to split it up and pick the value type (X, or Y, etc)
+// and float value out of it.
+tCmdType processesCommand(char *buff, int buffLen, float &cmdVal){
 	cmdVal = noParam;
 	int gcmdType = -1;
 
@@ -215,12 +206,10 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 	if (buffLen < 2)
 		return GCMD_NONE;
 
-	switch (buff[0])
-	{
+	switch (buff[0]){
 	case 'G':
 		sscanf(buff, "G%d", &gcmdType);
-		switch(gcmdType)
-		{
+		switch(gcmdType){
 		case 1: return GCMD_G1;
 		case 92: return GCMD_G92;
 		default: return GCMD_NONE;
@@ -246,8 +235,7 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
 
 
 // Read and parse the next line from file and retrieve the various parameters, if present
-bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f)
-{
+bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f){
 	char currCmdBuff[16];
 	tCmdType currCmd = GCMD_NONE;
 	int currCmdBuffIndex = 0;
@@ -264,8 +252,7 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 	if (cmd[0] == ';')
 		return false;
 
-	for (int i = 0; i < cmdLen; i++)
-	{
+	for (int i = 0; i < cmdLen; i++){
 		currCmdBuff[currCmdBuffIndex] = cmd[i];
 		// We process a command whenever we see a space or the end of the string, which is always a 0 (NULL)
 		if ((currCmdBuff[currCmdBuffIndex] == ' ') || (currCmdBuff[currCmdBuffIndex] == 0))
@@ -300,11 +287,9 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 }
 
 // Use parameters gathered from command to move the motors, extrude, that sort of thing
-void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f)
-{
+void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f){
 	// execute functions inside this algorithm
-	switch (gcmd)
-	{
+	switch (gcmd){
 	case GCMD_G1:
 		handleCommand_G1(x, y, z, e, f);
 		break;
@@ -319,15 +304,13 @@ void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f)
 }
 
 // Read the file, one line at a time
-long readLine(long fd, char *buffer, long buffLen)
-{
+long readLine(long fd, char *buffer, long buffLen){
 	long index = 0;
 	char c;
 
 	// Read the file one character at a time until there's nothing left
 	// or we're at the end of the buffer
-	while (fileReadData(fd, &c, 1) && (index < (buffLen - 1)))
-	{
+	while (fileReadData(fd, &c, 1) && (index < (buffLen - 1))){
 		//writeDebugStreamLine("c: %c (0x%02X)", c, c);
 		switch (c)
 		{
@@ -347,8 +330,7 @@ long readLine(long fd, char *buffer, long buffLen)
 		return index;  // number of characters in the line
 }
 
-void handleCommand_G1(float x, float y, float z, float e, float f)
-{
+void handleCommand_G1(float x, float y, float z, float e, float f){
 	writeDebugStreamLine("Handling G1 command");
 	float motorDegrees; 	// Amount the motor has to move
 	float deltaPosition;	// The difference between the current position and the one we want to move to
@@ -363,29 +345,29 @@ void handleCommand_G1(float x, float y, float z, float e, float f)
 		float yDegrees = calcMotorDegrees(deltaPosition, yDegreesToMM);
 		//math
 		//y-power = y-dist/x-dist *,x-power
-		moveMotorAxis(x_axis, xDegrees, xPower);
-		moveMotorAxis(y_axis, yDegrees, yPower);
+		moveAxis(x_axis, xDegrees, xPower);
+		moveAxis(y_axis, yDegrees, yPower);
 	}
 
 	if((x != noParam) && (y == noParam)){
 		writeDebugStreamLine("\n----------    X AXIS   -------------");
 		deltaPosition = calcDeltaDistance(xAxisPosition, x);
 		motorDegrees = calcMotorDegrees(deltaPosition, xDegreesToMM);
-		moveMotorAxis(x_axis, motorDegrees, setPower);
+		moveAxis(x_axis, motorDegrees, setPower);
 	}
 
 	if((y != noParam) && (x == noParam)){
 		writeDebugStreamLine("\n----------    Y AXIS   -------------");
 		deltaPosition = calcDeltaDistance(yAxisPosition, y);
 		motorDegrees = calcMotorDegrees(deltaPosition, yDegreesToMM);
-		moveMotorAxis(y_axis, motorDegrees, setPower);
+		moveAxis(y_axis, motorDegrees, setPower);
 	}
 
 	if(z != noParam){
 		writeDebugStreamLine("\n----------    Z AXIS   -------------");
 		deltaPosition = calcDeltaDistance(zAxisPosition, z);
 		motorDegrees = calcMotorDegrees(deltaPosition, zDegreesToMM);
-		moveMotorAxis(z_axis, motorDegrees, setPower);
+		moveAxis(z_axis, motorDegrees, setPower);
 	}
 
 #ifndef DISABLE_MOTORS
@@ -411,9 +393,7 @@ void handleCommand_G92(float x, float y, float z, float e, float f){
 	}
 }
 
-void startSeq(){
-	setLEDColor(ledRed);
-
+void seqStart(){
 	playTone(554, 5);
 	sleep(1000);
 	playTone(554, 5);
@@ -425,9 +405,8 @@ void startSeq(){
 #endif
 }
 
-void endSeq(){
+void seqEnd(){
 	setLEDColor(ledGreen);
-
 #ifndef DISABLE_MOTORS
 	moveMotorTarget(extruderButton, 75, 100);
 #endif

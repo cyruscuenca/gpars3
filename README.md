@@ -29,7 +29,7 @@ https://www.youtube.com/watch?v=36_p1c6M734
 
 https://www.youtube.com/watch?v=ibm2scWGx3Q
 
-In the future, I'll post a coule tuturials to make it easier to make a LEGO 3D printer.
+In the future, I'll post a couple tuturials to make it easier to make a LEGO 3D printer.
 
 ## Configuration
 

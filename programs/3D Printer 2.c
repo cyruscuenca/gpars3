@@ -1,4 +1,4 @@
-#pragma config(Motor,  motorA,          extruderButton, tmotorEV3_Large, PIDControl, encoder)
+#pragma config(Motor,  motorA,          extruderButton, tmotorEV3_Large, PIDControl, reversed, encoder)
 #pragma config(Motor,  motorB,          z_axis,        tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor,  motorC,          x_axis,        tmotorEV3_Medium, PIDControl, encoder)
 #pragma config(Motor,  motorD,          y_axis,        tmotorEV3_Medium, PIDControl, encoder)
@@ -14,13 +14,13 @@
 //:filename
 const char *fileName = "gcode.txt";
 
-
 // You need some kind of value here that will never be used in your g-code
 const float noParam = -255;
 
 const long EOF = -255;
 
-typedef enum tCmdType{
+typedef enum tCmdType
+{
 	GCMD_NONE,
 	GCMD_G1,
 	GCMD_G92,
@@ -31,46 +31,42 @@ typedef enum tCmdType{
 	GCMD_F,
 } tCmdType;
 
+
 #ifndef DISABLE_MOTORS
 void waitForMotors();
 #endif
 
 float calcDeltaDistance(float &currentPosition, float newPosition);
-float calcMotorDegrees(float deltaPosition, long degToMM);
-void moveAxis(tMotor axis, float degrees, long motorPower);
-void seqStart();
-void seqEnd();
+float calcMotorDegrees(float travelDistance, long degToMM);
+void moveMotorAxis(tMotor axis, float degrees);
+void startSeq();
+void endSeq();
 tCmdType processesCommand(char *buff, int buffLen, float &cmdVal);
 bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f);
 void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f);
 long readLine(long fd, char *buffer, long buffLen);
 void handleCommand_G1(float x, float y, float z, float e, float f);
 void handleCommand_G92(float x, float y, float z, float e, float f);
-void extruderSwitch(long onOrOff);
-long onOrOff;
-long extruderStatus;
-long degBuff;
+long degBuff = 0;
+
 //this is where you specify your starting position
 //:startposition
-float xAxisPosition, yAxisPosition, zAxisPosition = 0;
+float xAxisPosition = 0;
 
-//This is where you specify the degrees to mm so the program can compensate properly
-long xDegToMM = 10; //:degreestomm
-long yDegToMM = 8;
-long zDegToMM = 13;
-//This is where you can the median speed of the motors
-long setPower = 9; //:setspeed
-//This is where you set how many degrees the motor that pushes the extude button needs
-//to move in order to extrude filament
-long setExtruderDeg = 40; //:setextruderdeg
+float yAxisPosition = 0;
 
-long xPower, yPower = setPower;
+float zAxisPosition = 0;
 
+//this is where you specify the degrees to MM so the program can compensate properly
+//:degreestomm
+long XdegreesToMM = 12;
+
+long YdegreesToMM = 5;
+
+long ZdegreesToMM = 12;
 task main(){
 	clearDebugStream();
-	setLEDColor(ledRed);
-	seqStart();
-	setLEDColor(ledOff);
+	startSeq();
 
 	float x, y, z, e, f = 0.0;
 	long fd = 0;
@@ -81,16 +77,20 @@ task main(){
 
 	fd = fileOpenRead(fileName);
 
-	if (fd < 0){ // if file is not found/cannot open
+	if (fd < 0) // if file is not found/cannot open
+	{
 		writeDebugStreamLine("Could not open %s", fileName);
 		return;
 	}
 
-	while (true){
+	while (true)
+	{
 		lineLength = readLine(fd, buffer, 128);
-		if (lineLength != EOF){
+		if (lineLength != EOF)
+		{
 			// We can ignore empty lines
-			if (lineLength > 0){
+			if (lineLength > 0)
+			{
 				// The readNextCommand will only return true if a valid command has been found
 				// Comment handling is now done there.
 				if (readNextCommand(buffer, lineLength, gcmd, x, y, z, e, f))
@@ -100,8 +100,8 @@ task main(){
 			memset(buffer, 0, sizeof(buffer));
 		}
 		else{
+			endSeq();
 			writeDebugStreamLine("All done!");
-			seqEnd();
 			return;
 		}
 	}
@@ -119,7 +119,7 @@ void waitForMotors(){
 // and update the current position
 float calcDeltaDistance(float &currentPosition, float newPosition){
 
-	writeDebugStreamLine("calcDeltaDistance(Current position: %f, New position: %f)", currentPosition, newPosition);
+	writeDebugStreamLine("calcDeltaDistance(%f, %f)", currentPosition, newPosition);
 
 	float deltaPosition = newPosition - currentPosition;
 	writeDebugStreamLine("deltaPosition: %f", deltaPosition);
@@ -129,36 +129,39 @@ float calcDeltaDistance(float &currentPosition, float newPosition){
 }
 
 // Calculate the degrees the motor has to turn, using provided gear size
-float calcMotorDegrees(float deltaPosition, long degToMM)
+float calcMotorDegrees(float travelDistance, long degToMM)
 {
-	writeDebugStreamLine("calcMotorDegrees(%f, %f)", deltaPosition, degToMM);
-	return deltaPosition * degToMM;
+	writeDebugStreamLine("calcMotorDegrees(%f, %f)", travelDistance, degToMM);
+	return travelDistance * degToMM;
 }
 
 // Wrapper to move the motor, provides additional debugging feedback
-void moveAxis(tMotor axis, float degrees, long motorPower){
-	writeDebugStreamLine("moveAxis: motor: %d, rawDegrees: %f, power: %d", axis, degrees, motorPower);
+void moveMotorAxis(tMotor axis, float degrees)
+{
+	writeDebugStreamLine("moveMotorAxis: motor: %d, rawDegrees: %f", axis, degrees);
 #ifndef DISABLE_MOTORS
+	long motorSpeed = 7;
 	long roundedDegrees = round(degrees);
 	degBuff = degrees - roundedDegrees + degBuff;
-	if (roundedDegrees < 0){
+	if (roundedDegrees < 0)
+	{
 		roundedDegrees = abs(roundedDegrees);
-		motorPower *= -1;
+		motorSpeed = -7;
 	}
 	if (degBuff > 1 || degBuff < -1){
 		int degBuffRounded = round(degBuff);
 		roundedDegrees = roundedDegrees + degBuffRounded;
 		degBuff = degBuff - degBuffRounded;
 	}
-	moveMotorTarget(axis, roundedDegrees, motorPower);
+	moveMotorTarget(axis, roundedDegrees, motorSpeed);
 #endif
 	return;
 }
 
 // We're passed a single command, like "G1" or "X12.456"
-// We need to split it up and pick the value type (X, or Y, etc)
-// and float value out of it.
-tCmdType processesCommand(char *buff, int buffLen, float &cmdVal){
+// We need to split it up and pick the value type (X, or Y, etc) and float value out of it.
+tCmdType processesCommand(char *buff, int buffLen, float &cmdVal)
+{
 	cmdVal = noParam;
 	int gcmdType = -1;
 
@@ -166,13 +169,15 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal){
 	if (buffLen < 2)
 		return GCMD_NONE;
 
-	switch (buff[0]){
+	switch (buff[0])
+	{
 	case 'G':
 		sscanf(buff, "G%d", &gcmdType);
-		switch(gcmdType){
-		case 1: return GCMD_G1;
-		case 92: return GCMD_G92;
-		default: return GCMD_NONE;
+		switch(gcmdType)
+		{
+			case 1: return GCMD_G1;
+			case 92: return GCMD_G92;
+			default: return GCMD_NONE;
 		}
 	case 'X':
 		sscanf(buff, "X%f", &cmdVal); return GCMD_X;
@@ -195,7 +200,8 @@ tCmdType processesCommand(char *buff, int buffLen, float &cmdVal){
 
 
 // Read and parse the next line from file and retrieve the various parameters, if present
-bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f){
+bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, float &z, float &e, float &f)
+{
 	char currCmdBuff[16];
 	tCmdType currCmd = GCMD_NONE;
 	int currCmdBuffIndex = 0;
@@ -212,7 +218,8 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 	if (cmd[0] == ';')
 		return false;
 
-	for (int i = 0; i < cmdLen; i++){
+	for (int i = 0; i < cmdLen; i++)
+	{
 		currCmdBuff[currCmdBuffIndex] = cmd[i];
 		// We process a command whenever we see a space or the end of the string, which is always a 0 (NULL)
 		if ((currCmdBuff[currCmdBuffIndex] == ' ') || (currCmdBuff[currCmdBuffIndex] == 0))
@@ -221,14 +228,14 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 			// writeDebugStreamLine("currCmd: %d, currCmdVal: %f", currCmd, currCmdVal);
 			switch (currCmd)
 			{
-			case GCMD_NONE: gcmd = GCMD_NONE; return false;
-			case GCMD_G1: gcmd = GCMD_G1; break;
-			case GCMD_G92: gcmd = GCMD_G92; break;
-			case GCMD_X: x = currCmdVal; break;
-			case GCMD_Y: y = currCmdVal; break;
-			case GCMD_Z: z = currCmdVal; break;
-			case GCMD_E: e = currCmdVal; break;
-			case GCMD_F: f = currCmdVal; break;
+				case GCMD_NONE: gcmd = GCMD_NONE; return false;
+				case GCMD_G1: gcmd = GCMD_G1; break;
+				case GCMD_G92: gcmd = GCMD_G92; break;
+				case GCMD_X: x = currCmdVal; break;
+				case GCMD_Y: y = currCmdVal; break;
+				case GCMD_Z: z = currCmdVal; break;
+				case GCMD_E: e = currCmdVal; break;
+				case GCMD_F: f = currCmdVal; break;
 			}
 			// Clear the currCmdBuff
 			memset(currCmdBuff, 0, sizeof(currCmdBuff));
@@ -247,30 +254,33 @@ bool readNextCommand(char *cmd, int cmdLen, tCmdType &gcmd, float &x, float &y, 
 }
 
 // Use parameters gathered from command to move the motors, extrude, that sort of thing
-void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f){
+void executeCommand(tCmdType gcmd, float x, float y, float z, float e, float f)
+{
 	// execute functions inside this algorithm
-	switch (gcmd){
-	case GCMD_G1:
-		handleCommand_G1(x, y, z, e, f);
-		break;
-	case GCMD_G92:
-		handleCommand_G92(x, y, z, e, f);
-		break;
-	default:
-		displayCenteredBigTextLine(1 , "error! Gcmd value is unknown!");
-		break;
+	switch (gcmd)
+	{
+		case GCMD_G1:
+			handleCommand_G1(x, y, z, e, f);
+			break;
+		case GCMD_G92:
+			handleCommand_G92(x, y, z, e, f);
+			break;
+		default:
+			break;
 	}
 
 }
 
 // Read the file, one line at a time
-long readLine(long fd, char *buffer, long buffLen){
+long readLine(long fd, char *buffer, long buffLen)
+{
 	long index = 0;
 	char c;
 
 	// Read the file one character at a time until there's nothing left
 	// or we're at the end of the buffer
-	while (fileReadData(fd, &c, 1) && (index < (buffLen - 1))){
+	while (fileReadData(fd, &c, 1) && (index < (buffLen - 1)))
+	{
 		//writeDebugStreamLine("c: %c (0x%02X)", c, c);
 		switch (c)
 		{
@@ -290,61 +300,39 @@ long readLine(long fd, char *buffer, long buffLen){
 		return index;  // number of characters in the line
 }
 
-void handleCommand_G1(float x, float y, float z, float e, float f){
+void handleCommand_G1(float x, float y, float z, float e, float f)
+{
 	writeDebugStreamLine("Handling G1 command");
-
-	if ( e || f > 1 && extruderStatus == 1){
-		onOrOff = 0;
-		extruderSwitch(onOrOff);
-	}
-	if ( e || f < 1 && extruderStatus == 0){
-		onOrOff = 0;
-		extruderSwitch(onOrOff);
-	}
 	float motorDegrees; 	// Amount the motor has to move
 	float deltaPosition;	// The difference between the current position and the one we want to move to
 
-	if((x != noParam) && (y != noParam)){
-
-		//the power calculation is so both motors stop moving
-		//at the same time
-		deltaPosition = calcDeltaDistance(xAxisPosition, x);
-		float xDegrees = calcMotorDegrees(deltaPosition, xDegToMM);
-		deltaPosition = calcDeltaDistance(yAxisPosition, y);
-		float yDegrees = calcMotorDegrees(deltaPosition, yDegToMM);
-		//math
-		//y-power = y-dist/x-dist *,x-power
-		moveAxis(x_axis, xDegrees, xPower);
-		moveAxis(y_axis, yDegrees, yPower);
-	}
-
-	if((x != noParam) && (y == noParam)){
+	if(x != noParam){
 		writeDebugStreamLine("\n----------    X AXIS   -------------");
 		deltaPosition = calcDeltaDistance(xAxisPosition, x);
-		motorDegrees = calcMotorDegrees(deltaPosition, xDegToMM);
-		moveAxis(x_axis, motorDegrees, setPower);
+		motorDegrees = calcMotorDegrees(deltaPosition, XdegreesToMM);
+		moveMotorAxis(x_axis, motorDegrees);
 	}
 
-	if((y != noParam) && (x == noParam)){
+	if(y != noParam){
 		writeDebugStreamLine("\n----------    Y AXIS   -------------");
 		deltaPosition = calcDeltaDistance(yAxisPosition, y);
-		motorDegrees = calcMotorDegrees(deltaPosition, yDegToMM);
-		moveAxis(y_axis, motorDegrees, setPower);
+		motorDegrees = calcMotorDegrees(deltaPosition, YdegreesToMM);
+		moveMotorAxis(y_axis, motorDegrees);
 	}
 
 	if(z != noParam){
 		writeDebugStreamLine("\n----------    Z AXIS   -------------");
 		deltaPosition = calcDeltaDistance(zAxisPosition, z);
-		motorDegrees = calcMotorDegrees(deltaPosition, zDegToMM);
-		moveAxis(z_axis, motorDegrees, setPower);
+		motorDegrees = calcMotorDegrees(deltaPosition, ZdegreesToMM);
+		moveMotorAxis(z_axis, motorDegrees);
 	}
-
 #ifndef DISABLE_MOTORS
 	waitForMotors();
 #endif
 }
 
-void handleCommand_G92(float x, float y, float z, float e, float f){
+void handleCommand_G92(float x, float y, float z, float e, float f)
+{
 	writeDebugStreamLine("Handling G92 command");
 	if(x != noParam){
 		writeDebugStreamLine("\n----------    X AXIS   -------------");
@@ -360,71 +348,33 @@ void handleCommand_G92(float x, float y, float z, float e, float f){
 		writeDebugStreamLine("\n----------    Z AXIS   -------------");
 		zAxisPosition = z;
 	}
-}
-
-void seqStart(){
-	/*
-	long isStartPressed = 0;
-	long slideNum = 1; //slideNum holds what number slide is being displayed
-	drawBmpfile(0, 127, "slide1");
-	sleep(2000);
-	while(isStartPressed == 0){
-	waitForButtonPress();
-	long isLeftPressed = getButtonPress(LEFT_BUTTON);
-	long isRightPressed = getButtonPress(RIGHT_BUTTON);
-	long isEnterPressed = getButtonPress(ENTER_BUTTON);
-
-	if(isLeftPressed == 1){
-	playTone(554, 5);
-	slideNum = slideNum - 1;
-	}
-	if(isRightPressed == 1){
-	playTone(554, 5);
-	slideNum = slideNum + 1;
-	}
-	if(slideNum == 1 && isEnterPressed == 1){
-	playTone(554, 5);
-	isStartPressed = 1;
-	sleep(200);
-	}
-	if(slideNum == 0){
-	slideNum = 3;
-	}
-	if(slideNum == 4){
-	slideNum = 1;
-	}
-	if(slideNum == 1){
-	drawBmpfile(0, 127, "slide1");
-	}
-	if(slideNum == 2){
-	drawBmpfile(0, 127, "slide2");
-	}
-	if(slideNum == 3){
-	drawBmpfile(0, 127, "slide3");
-	}
-	sleep(250);
-	}
-	*/
-
 #ifndef DISABLE_MOTORS
-	extruderSwitch(1);
+	waitForMotors();
 #endif
 }
 
-void seqEnd(){
+
+
+void startSeq(){
+	setLEDColor(ledRed);
+
+	playTone(554, 5);
+	sleep(100);
+	playTone(554, 5);
+	sleep(100);
+	playTone(554, 5);
+	sleep(100);
+
+	moveMotorTarget(extruderButton, 40, -100);
+}
+
+void endSeq(){
 	setLEDColor(ledGreen);
-#ifndef DISABLE_MOTORS
-	extruderSwitch(0);
-#endif
-}
-
-void extruderSwitch(long onOrOff){
-
-	if (onOrOff == 1){
-		moveMotorTarget(extruderButton, setExtruderDeg, 100);
-	}
-
-	if (onOrOff == 0){
-		moveMotorTarget(extruderButton, setExtruderDeg * -1, 100);
-	}
+	moveMotorTarget(extruderButton, 40, 100);
+	playTone(554, 5);
+	sleep(1000);
+	playTone(554, 5);
+	sleep(1000);
+	playTone(554, 5);
+	sleep(1000);
 }

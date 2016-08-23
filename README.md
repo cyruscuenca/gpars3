@@ -31,22 +31,19 @@ https://www.youtube.com/watch?v=ibm2scWGx3Q
 
 In the future, I'll post a couple tuturials to make it easier to make a LEGO 3D printer.
 
-## Configuration
-
+## Inistial Calibration
 
 All of the config variables are located between line 45 and 70.
 
 I have a sytem of finding variables(for people not familiar with text based code) that utilizes
 comments.
 
-__To find something referanced in my video tuturials:__
-
 1. Press CTRL + F 
 2. Type "__:__"
 
 Then, with no spaces, and in lowercase,
 
-3. Type the keyword I say
+3. Type one of the keywords below
 4. Click enter
 
 | |   Reference words |
@@ -56,6 +53,17 @@ Then, with no spaces, and in lowercase,
 |__:__  |startseq      |
 |__:__  |endseq        |
 |__:__  |power         |
+
+:startposition should be 0, 0, 0, unless you are starting at an offset position.
+
+:degreestomm should be how many degrees a mottor needs to turn in order to move one mm. You can use the port view tool to find the proper value for eah motor.
+
+:startseg here, change the derees your extruder motor needs to move in order to press the extruder button.
+
+:endseq, same, except enter the value X -1.
+
+:power set your motor power. You must fine tune this your self. Because there's a bit of a pause between motor movements, if you go too fast, thicker globs will be deposited on corners. You can get rid of these by lowering your speed.
+
 
 ## Credits
 

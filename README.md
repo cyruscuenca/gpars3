@@ -82,7 +82,7 @@ __Marc-Andre-Bazergui:__ http://bazmarc.ca
 Built the first LEGO 3D printer using a 3D pen. His used a math program to make shapes.
 
 
-__Thomas Madeya:__ nano-giants.net
+__Thomas Madeya:__ http://nano-giants.net
 
 Made the math program for Marc.
 
@@ -94,4 +94,4 @@ Read LICENSE.md for more info. It's really long :unamused:
 
 ## Contact
 
-Email Cyrus at: cyrushcuenca@gmail.com for questions.
+Email Cyrus at: hello@cyruscuenca.com for questions.

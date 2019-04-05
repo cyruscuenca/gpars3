@@ -19,7 +19,7 @@ the pen can use PLA and ABS(types of plastic).
 
 
 __DO NOT USE PLA!__ I kept using PLA with my pens, and 
-broke a whole bunch :neutral_face: I wasted a lot of money buying pens, so take my word and use ABS.
+broke a whole bunch. I wasted a lot of money buying pens, so take my word and use ABS.
 
 
 
@@ -58,7 +58,7 @@ Then, with no spaces, and in lowercase,
 
 :degreestomm should be how many degrees a mottor needs to turn in order to move one mm. You can use the port view tool to find the proper value for eah motor.
 
-:startseg here, change the derees your extruder motor needs to move in order to press the extruder button.
+:startseg here, change how many degrees your extruder motor needs to move in order to press the extruder button.
 
 :endseq, same, except enter the value X -1.
 
@@ -68,29 +68,18 @@ Then, with no spaces, and in lowercase,
 ## Credits
 
  __Cyrus Cuenca:__ http://cyruscuenca.blogspot.com
- 
-I build the the hardware, work on the parser, make the videos, and the document the LEGO printer.
 
 
 __Xander Soldaat:__ http://botbench.com
 
-Is a HUGE help with the programming :grinning:
+This was my first C project, and Xander walked me through it.
 
-
-__Marc-Andre-Bazergui:__ http://bazmarc.ca
-
-Built the first LEGO 3D printer using a 3D pen. His used a math program to make shapes.
-
-
-__Thomas Madeya:__ http://nano-giants.net
-
-Made the math program for Marc.
 
 ## License
 
-Creative Commons Attribution-NonCommercial 4.0 International Public License
+Creative Commons Attribution-Non Commercial 4.0 International Public License
 
-Read LICENSE.md for more info. It's really long :unamused:
+Read LICENSE.md
 
 ## Contact
 
